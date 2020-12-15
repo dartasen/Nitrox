@@ -24,7 +24,6 @@ namespace NitroxModel.Packets
             Water = water;
             InfectionAmount = infectionAmount;
             DeliveryMethod = NitroxDeliveryMethod.DeliveryMethod.UNRELIABLE_SEQUENCED;
-            UdpChannel = UdpChannelId.PLAYER_STATS;
         }
 
         public override string ToString()

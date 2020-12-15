@@ -13,7 +13,6 @@ namespace NitroxModel.Packets
         {
             VehicleMovementData = vehicleMovementData;
             DeliveryMethod = NitroxDeliveryMethod.DeliveryMethod.UNRELIABLE_SEQUENCED;
-            UdpChannel = UdpChannelId.VEHICLE_MOVEMENT;
         }
 
         public override string ToString()

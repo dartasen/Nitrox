@@ -27,15 +27,14 @@ namespace NitroxModel.Packets.Processors.Abstract
 
                     // Prepare arguments for constructor (if applicable):
                     object[] args = ctor.GetParameters().Select(pi =>
+                    {
+                        if (processorArguments.TryGetValue(pi.ParameterType, out object v))
                         {
-                            object v;
-                            if (processorArguments.TryGetValue(pi.ParameterType, out v))
-                            {
-                                return v;
-                            }
+                            return v;
+                        }
 
-                            throw new ArgumentException($"Argument value not defined for type {pi.ParameterType}! Used in {proc}");
-                        }).ToArray();
+                        throw new ArgumentException($"Argument value not defined for type {pi.ParameterType}! Used in {proc}");
+                    }).ToArray();
 
                     return (PacketProcessor)ctor.Invoke(args);
                 });

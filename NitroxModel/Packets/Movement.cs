@@ -21,7 +21,6 @@ namespace NitroxModel.Packets
             BodyRotation = bodyRotation;
             AimingRotation = aimingRotation;
             DeliveryMethod = NitroxDeliveryMethod.DeliveryMethod.UNRELIABLE_SEQUENCED;
-            UdpChannel = UdpChannelId.PLAYER_MOVEMENT;
         }
 
         public override string ToString()
