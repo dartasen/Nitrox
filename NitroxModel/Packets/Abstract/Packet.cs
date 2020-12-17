@@ -13,9 +13,8 @@ namespace NitroxModel.Packets
         static Packet()
         {
             IFormatterResolver resolver = CompositeResolver.Create(
-                // Enable surrogates first
-                //MessagePack.Unity.Extension.UnityBlitResolver.Instance,
-                MessagePack.Unity.UnityResolver.Instance,
+                // Enable custom surrogates first
+                NitroxResolver.Instance,
 
                 // finally use standard (default) resolver
                 StandardResolver.Instance
@@ -40,7 +39,7 @@ namespace NitroxModel.Packets
 
         public static bool IsTypeSerializable(Type type)
         {
-            return true;
+            return type == default;
         }
 
         public WrapperPacket ToWrapperPacket()
