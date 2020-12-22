@@ -33,7 +33,9 @@ namespace NitroxTest.Model.Packets
             visitedTypes.Add(t);
 
             // Recursively check all properties and fields, because IsSerializable only checks if the current type is a primitive or has the [Serializable] attribute.
-            t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public).Select(tt => tt.FieldType).ForEach(IsSerializable);
+            t.GetFields(BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Public)
+                .Select(tt => tt.FieldType)
+                .ForEach(IsSerializable);
         }
 
         [TestMethod]

@@ -39,7 +39,7 @@ namespace NitroxModel.Packets
 
         public static bool IsTypeSerializable(Type type)
         {
-            return type == default;
+            return NitroxResolver.Instance.IsSerializable(type);
         }
 
         public WrapperPacket ToWrapperPacket()

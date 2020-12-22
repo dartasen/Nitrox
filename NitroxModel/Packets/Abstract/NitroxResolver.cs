@@ -9,7 +9,7 @@ namespace NitroxModel.Packets
 {
     public class NitroxResolver : IFormatterResolver
     {
-        public static readonly NitroxResolver Instance;
+        public static readonly NitroxResolver Instance = new NitroxResolver();
 
         private static readonly Dictionary<Type, object> formatterMap;
 
@@ -53,6 +53,11 @@ namespace NitroxModel.Packets
             }
 
             return null;
+        }
+
+        public bool IsSerializable(Type type)
+        {
+            return formatterMap.TryGetValue(type, out _);
         }
     }
 }
