@@ -13,6 +13,7 @@ using NitroxLauncher.Events;
 using NitroxLauncher.Pages;
 using NitroxLauncher.Patching;
 using NitroxModel;
+using NitroxModel.Discovery;
 using NitroxModel.Helper;
 using NitroxModel.Logger;
 
@@ -24,8 +25,9 @@ namespace NitroxLauncher
         public static LauncherLogic Instance { get; private set; }
 
         public const string RELEASE_PHASE = "ALPHA";
+
         private NitroxEntryPatch nitroxEntryPatch;
-        private string subnauticaPath;
+        private string subnauticaPath, vrMode;
         private Process serverProcess;
         private Process gameProcess;
         private bool isEmbedded;
@@ -37,6 +39,16 @@ namespace NitroxLauncher
             {
                 value = Path.GetFullPath(value); // Ensures the path looks alright (no mixed / and \ path separators)
                 subnauticaPath = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string VrMode
+        {
+            get => vrMode;
+            private set
+            {
+                vrMode = value ?? "none";
                 OnPropertyChanged();
             }
         }
@@ -59,7 +71,7 @@ namespace NitroxLauncher
             {
                 Instance.SendServerCommand("stop\n");
             }
-            
+
             try
             {
                 nitroxEntryPatch.Remove();
@@ -295,21 +307,36 @@ namespace NitroxLauncher
             ProcessStartInfo startInfo = new ProcessStartInfo
             {
                 WorkingDirectory = subnauticaPath,
+                Arguments = "",
                 FileName = subnauticaExe
             };
 
-            if (PlatformDetection.IsEpic(subnauticaPath))
+            switch (PlatformDetection.GetPlatform(subnauticaPath))
             {
-                startInfo.Arguments = "-EpicPortal -vrmode none";
+                case Platform.EPIC:
+                    startInfo.Arguments = "-EpicPortal ";
+                    break;
+                case Platform.STEAM:
+                    startInfo.FileName = "steam://run/264710";
+                    break;
+
+                case Platform.MICROSOFT:
+                    startInfo.FileName = "ms-xbl-38616e6e:\\";
+                    break;
+
+                default:
+                    Log.Error("Failed to retrieve Platform through PlatformDetection, is it updated ?");
+                    break;
             }
-            else if (PlatformDetection.IsSteam(subnauticaPath))
-            {
-                startInfo.FileName = "steam://run/264710";
-            }
-            else if (PlatformDetection.IsMicrosoftStore(subnauticaPath))
-            {
-                startInfo.FileName = "ms-xbl-38616e6e:\\";
-            }
+
+            //NONE -vrmode none
+            //STEAMVR -openVR -vrmode SteamVR
+            //OCULUS -openVR -vrmode Oculus
+            //MORPHEUS          ?
+            //SPLITMODE/STERERO ?
+
+            startInfo.Arguments += "-vrmode none";
+
             return Process.Start(startInfo);
         }
 

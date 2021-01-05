@@ -12,12 +12,6 @@
             <FontFamily x:Key="RobotoMono">pack://application:,,,/Fonts/#Roboto Mono</FontFamily>
             <FontFamily x:Key="DefaultFont">pack://application:,,,/Fonts/#OpenSans</FontFamily>
 
-            <!-- Background images -->
-            <BitmapImage x:Key="VinesImage" UriSource="pack://application:,,,/Images/Vines.png" />
-            <BitmapImage x:Key="PlayGameImage" UriSource="pack://application:,,,/Images/PlayGameImage.png" />
-            <BitmapImage x:Key="SubnauticaMainImage" UriSource="pack://application:,,,/Images/SubnauticaMain.png" />
-            <BitmapImage x:Key="EscapePodImage" UriSource="pack://application:,,,/Images/EscapePod.png" />
-
             <!-- Foreground images -->
             <BitmapImage x:Key="NitroxImage" UriSource="pack://application:,,,/Images/Nitrox.png" />
             <BitmapImage x:Key="ExitImage" UriSource="pack://application:,,,/Images/exit.png" />

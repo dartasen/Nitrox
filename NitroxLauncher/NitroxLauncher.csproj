@@ -85,7 +85,6 @@
       <DependentUpon>ServerPage.xaml</DependentUpon>
     </Compile>
     <Compile Include="Patching\NitroxEntryPatch.cs" />
-    <Compile Include="Patching\PlatformDetection.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
@@ -175,20 +174,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Resource Include="Images\PlayGameImage.png" />
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Images\minimize.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\exit.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\SubnauticaMain.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <Resource Include="Images\EscapePod.png" />
-    <Resource Include="Images\Vines.png" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\Nitrox.png" />
