@@ -104,6 +104,7 @@
     <Compile Include="Discovery\InstallationFinders\ConfigFileGameFinder.cs" />
     <Compile Include="Discovery\Platform.cs" />
     <Compile Include="Discovery\PlatformDetection.cs" />
+    <Compile Include="Discovery\VRMode.cs" />
     <Compile Include="Helper\Mathf.cs" />
     <Compile Include="Helper\NitroxAppData.cs" />
     <Compile Include="Helper\PirateDetection.cs" />

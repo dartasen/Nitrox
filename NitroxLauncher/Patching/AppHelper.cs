@@ -7,7 +7,7 @@ using NitroxModel.Logger;
 
 namespace NitroxLauncher
 {
-    public class AppHelper
+    internal static class AppHelper
     {
         public static string ProgramFileDirectory = Environment.ExpandEnvironmentVariables("%ProgramW6432%");
 
@@ -50,8 +50,6 @@ namespace NitroxLauncher
                         Log.Error("Error while trying to instance an admin processus of the launcher, aborting");
                     }
                 }
-
-                //We might exit the application if the user says no ?
             }
             else
             {

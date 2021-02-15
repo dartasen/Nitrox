@@ -6,13 +6,7 @@
                 xmlns:local="clr-namespace:NitroxLauncher"
                 mc:Ignorable="d" d:DesignWidth="766"
                 Title="Launch Game" Height="984">
-    <local:PageBase.Resources>
-        <BitmapImage x:Key="SocialDiscord" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="pack://application:,,,/images/social/discord.png"/>
-        <BitmapImage x:Key="SocialTwitter" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="pack://application:,,,/images/social/twitter.png"/>
-        <BitmapImage x:Key="SocialReddit" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="pack://application:,,,/images/social/reddit.png"/>
-        <BitmapImage x:Key="SocialWebsite" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="pack://application:,,,/images/social/website.png"/>
-        <BitmapImage x:Key="SocialGithub" CreateOptions="IgnoreImageCache" CacheOption="OnLoad" UriSource="pack://application:,,,/images/social/github.png"/>
-    </local:PageBase.Resources>
+
     <Grid Height="1015" VerticalAlignment="Top">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="22*"/>
@@ -33,6 +27,7 @@
                 <RowDefinition Height="175*"/>
                 <RowDefinition Height="311*"/>
             </Grid.RowDefinitions>
+            
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="0*"/>
                 <ColumnDefinition Width="174*"/>
@@ -40,6 +35,7 @@
                 <ColumnDefinition Width="269*"/>
                 <ColumnDefinition Width="0*"/>
             </Grid.ColumnDefinitions>
+
             <StackPanel Margin="0,94,0,0" Grid.Column="2" HorizontalAlignment="Left" Width="171" Height="44" VerticalAlignment="Top">
                 <TextBlock FontSize="12" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold"><Run Text="GAME DEVELOPER"/></TextBlock>
                 <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap"><Run Text="Unknownworlds"/></TextBlock>
@@ -82,46 +78,46 @@
 
                 <TextBlock Foreground="White" Margin="190,54,0,54" Width="24" HorizontalAlignment="Left" Style="{DynamicResource SocialButton}">
                     <Hyperlink NavigateUri="https://twitter.com/modnitrox" RequestNavigate="OnRequestNavigate" ToolTip="Follow on Twitter" Foreground="White" TextDecorations="{x:Null}">
-                        <Image Source="{DynamicResource SocialTwitter}" Width="24" HorizontalAlignment="Left" />
+                        <Image Source="{StaticResource SocialTwitter}" Width="24" HorizontalAlignment="Left" />
                     </Hyperlink>
                 </TextBlock>
 
                 <TextBlock Foreground="White" Margin="260,54,261,54" Width="24" HorizontalAlignment="Left" Style="{DynamicResource SocialButton}">
                     <Hyperlink NavigateUri="https://reddit.com/r/SubnauticaNitrox" RequestNavigate="OnRequestNavigate" ToolTip="Nitrox Subreddit" Foreground="White" TextDecorations="{x:Null}">
-                        <Image Source="{DynamicResource SocialReddit}" Width="24" HorizontalAlignment="Left" />
+                        <Image Source="{StaticResource SocialReddit}" Width="24" HorizontalAlignment="Left" />
                     </Hyperlink>
                 </TextBlock>
 
                 <TextBlock Foreground="White" Margin="330,54,0,54" Width="24" HorizontalAlignment="Left" Style="{DynamicResource SocialButton}">
                     <Hyperlink NavigateUri="https://github.com/SubnauticaNitrox/Nitrox" RequestNavigate="OnRequestNavigate" ToolTip="Contribute on GitHub" Foreground="White" TextDecorations="{x:Null}">
-                        <Image Source="{DynamicResource SocialGithub}" Width="24" HorizontalAlignment="Left" />
+                        <Image Source="{StaticResource SocialGithub}" Width="24" HorizontalAlignment="Left" />
                     </Hyperlink>
                 </TextBlock>
 
                 <TextBlock Foreground="White" Margin="400,54,0,54" Width="24" HorizontalAlignment="Left" Style="{DynamicResource SocialButton}">
                     <Hyperlink NavigateUri="https://nitrox.rux.gg" RequestNavigate="OnRequestNavigate" ToolTip="Nitrox Website" Foreground="White" TextDecorations="{x:Null}">
-                        <Image Source="{DynamicResource SocialWebsite}" Width="24" HorizontalAlignment="Left" />
+                        <Image Source="{StaticResource SocialWebsite}" Width="24" HorizontalAlignment="Left" />
                     </Hyperlink>
                 </TextBlock>
-
-
             </Grid>
-
 
             <StackPanel Margin="0,11,0,0" Grid.Column="1" HorizontalAlignment="Left" Width="171" Height="44" VerticalAlignment="Top" Grid.Row="2">
                 <TextBlock FontSize="18" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap"><Run Text="Contributors"/></TextBlock>
             </StackPanel>
             <StackPanel Margin="0,11,0,0" Grid.Column="2" HorizontalAlignment="Left" Width="545" Grid.Row="2" Grid.ColumnSpan="2">
                 <TextBlock FontSize="12" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold"><Run Text="DEVELOPERS"/></TextBlock>
-                <TextBlock FontSize="16" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">                    <Run>Sunrunner, Killzoms, Jannify, Marijn, Measurity, MadMax, Nes, _HeN_, CatSZekely, Garsia, RabidCrab, AquariusSidhe, Amarok, iCleeem</Run>
+                <TextBlock FontSize="16" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+                    <Run>Sunrunner, Killzoms, Jannify, Marijn, Measurity, MadMax, Nes, _HeN_, CatSZekely, Garsia, RabidCrab, AquariusSidhe, Amarok, iCleeem</Run>
                 </TextBlock>
 
                 <TextBlock FontSize="12" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold"><Run Text="STAFF"/></TextBlock>
-                <TextBlock FontSize="16" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">                    <Run>Werewolfs, Shalix, CriticalCookie, InfamousJay, and a big thanks to the discord support team (Artic-Peepers, Peepers)</Run>
+                <TextBlock FontSize="16" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+                    <Run>Werewolfs, Shalix, CriticalCookie, InfamousJay, and a big thanks to the discord support team (Artic-Peepers, Peepers)</Run>
                 </TextBlock>
 
                 <TextBlock FontSize="12" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold"><Run Text="DESIGN"/></TextBlock>
-                <TextBlock FontSize="16" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">                    <Run>Rux</Run>
+                <TextBlock FontSize="16" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+                    <Run>Rux</Run>
                 </TextBlock>
 
             </StackPanel>

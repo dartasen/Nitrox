@@ -75,13 +75,13 @@ namespace NitroxLauncher
             logic.SetTargetedSubnauticaPath(GameInstallationFinder.Instance.FindGame())
                 .ContinueWith(task =>
                     {
-                        if (logic.IsSubnauticaDirectory(task.Result))
+                        if (GameInstallationFinder.IsSubnauticaDirectory(task.Result))
                         {
-                            LauncherLogic.Instance.NavigateTo<LaunchGamePage>();
+                            logic.NavigateTo<LaunchGamePage>();
                         }
                         else
                         {
-                            LauncherLogic.Instance.NavigateTo<OptionPage>();
+                            logic.NavigateTo<OptionPage>();
                         }
 
                         logic.CheckNitroxVersion();
@@ -89,13 +89,6 @@ namespace NitroxLauncher
                     CancellationToken.None,
                     TaskContinuationOptions.OnlyOnRanToCompletion,
                     TaskScheduler.FromCurrentSynchronizationContext());
-        }
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
 
         private bool CanClose()
@@ -135,7 +128,7 @@ namespace NitroxLauncher
 
             if (e.Embedded)
             {
-                LauncherLogic.Instance.NavigateTo<ServerConsolePage>();
+                logic.NavigateTo<ServerConsolePage>();
             }
         }
 
@@ -143,25 +136,35 @@ namespace NitroxLauncher
         {
             Dispatcher?.Invoke(() =>
             {
-                if (LauncherLogic.Instance.NavigationIsOn<ServerConsolePage>())
+                if (logic.NavigationIsOn<ServerConsolePage>())
                 {
-                    LauncherLogic.Instance.NavigateTo<ServerPage>();
+                    logic.NavigateTo<ServerPage>();
                 }
             });
         }
 
         private void ButtonNavigation_Click(object sender, RoutedEventArgs e)
         {
-            if (!(sender is FrameworkElement elem))
+            if (sender is not FrameworkElement elem)
             {
                 return;
             }
-            LauncherLogic.Instance.NavigateTo(elem.Tag?.GetType());
+
+            logic.NavigateTo(elem.Tag?.GetType());
         }
 
         private void PART_VerticalScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
 
         }
+
+        #region PropertyChanged
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion
     }
 }

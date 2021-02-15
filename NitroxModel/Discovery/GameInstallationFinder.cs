@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using NitroxModel.Discovery.InstallationFinders;
 
 namespace NitroxModel.Discovery
@@ -46,6 +47,17 @@ namespace NitroxModel.Discovery
             }
 
             return null;
+        }
+
+        public static bool IsSubnauticaDirectory(string directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+            {
+                return false;
+            }
+
+            return Directory.EnumerateFileSystemEntries(directory, "*.exe")
+                .Any(file => Path.GetFileName(file)?.Equals("subnautica.exe", StringComparison.OrdinalIgnoreCase) ?? false);
         }
     }
 }

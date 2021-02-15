@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -27,11 +26,11 @@ namespace NitroxLauncher
         public const string RELEASE_PHASE = "ALPHA";
 
         private NitroxEntryPatch nitroxEntryPatch;
-        private string subnauticaPath, vrMode;
         private Process serverProcess;
         private Process gameProcess;
         private bool isEmbedded;
 
+        private string subnauticaPath;
         public string SubnauticaPath
         {
             get => subnauticaPath;
@@ -43,12 +42,13 @@ namespace NitroxLauncher
             }
         }
 
-        public string VrMode
+        private VRMode vrMode;
+        public VRMode VrMode
         {
             get => vrMode;
-            private set
+            set
             {
-                vrMode = value ?? "none";
+                vrMode = value;
                 OnPropertyChanged();
             }
         }
@@ -152,8 +152,7 @@ namespace NitroxLauncher
                 TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        public event PropertyChangedEventHandler PropertyChanged;
-
+        #region Navigation
         public void NavigateTo(Type page)
         {
             if (page == null || !page.IsSubclassOf(typeof(Page)) && page != typeof(Page))
@@ -171,36 +170,18 @@ namespace NitroxLauncher
             }
         }
 
-        public void NavigateTo<TPage>() where TPage : Page
-        {
-            NavigateTo(typeof(TPage));
-        }
+        public void NavigateTo<TPage>() where TPage : Page => NavigateTo(typeof(TPage));
 
         public bool NavigationIsOn<TPage>() where TPage : Page
         {
-            MainWindow window = Application.Current.MainWindow as MainWindow;
-            if (window == null)
+            if (Application.Current.MainWindow is MainWindow window)
             {
-                return false;
-            }
-            return window.FrameContent?.GetType() == typeof(TPage);
-        }
-
-        public bool IsSubnauticaDirectory(string directory)
-        {
-            if (string.IsNullOrWhiteSpace(directory))
-            {
-                return false;
+                return window.FrameContent?.GetType() == typeof(TPage);
             }
 
-            return Directory.EnumerateFileSystemEntries(directory, "*.exe")
-                .Any(file => Path.GetFileName(file)?.Equals("subnautica.exe", StringComparison.OrdinalIgnoreCase) ?? false);
+            return false;
         }
-
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
+        #endregion
 
         internal async Task StartSingleplayerAsync()
         {
@@ -329,12 +310,6 @@ namespace NitroxLauncher
                     break;
             }
 
-            //NONE -vrmode none
-            //STEAMVR -openVR -vrmode SteamVR
-            //OCULUS -openVR -vrmode Oculus
-            //MORPHEUS          ?
-            //SPLITMODE/STERERO ?
-
             startInfo.Arguments += "-vrmode none";
 
             return Process.Start(startInfo);
@@ -393,5 +368,14 @@ namespace NitroxLauncher
                     },
                     TaskContinuationOptions.OnlyOnRanToCompletion);
         }
+
+        #region PropertyChanged
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+        #endregion
     }
 }

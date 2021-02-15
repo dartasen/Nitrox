@@ -12,14 +12,37 @@
             <FontFamily x:Key="RobotoMono">pack://application:,,,/Fonts/#Roboto Mono</FontFamily>
             <FontFamily x:Key="DefaultFont">pack://application:,,,/Fonts/#OpenSans</FontFamily>
 
+            <!-- Background images -->
+            <BitmapImage x:Key="PlayGameImage" UriSource="pack://application:,,,/Images/background/EscapePod.png" />
+            <BitmapImage x:Key="SubnauticaMainImage" UriSource="pack://application:,,,/Images/SubnauticaMain.png" />
+
             <!-- Foreground images -->
             <BitmapImage x:Key="NitroxImage" UriSource="pack://application:,,,/Images/Nitrox.png" />
+            <BitmapImage x:Key="NitroxWhiteLogo" UriSource="pack://application:,,,/Images/NitroxWhiteLogo.png" />
+            <BitmapImage x:Key="ServerIllustration"  UriSource="pack://application:,,,/Images/serverIllustration.png"/>
             <BitmapImage x:Key="ExitImage" UriSource="pack://application:,,,/Images/exit.png" />
             <BitmapImage x:Key="MinimizeImage" UriSource="pack://application:,,,/Images/minimize.png" />
+
+            <!-- Sidebar -->
+            <BitmapImage x:Key="SideBarPlayIcon" UriSource="pack://application:,,,/Images/sidebar/play.png"/>
+            <BitmapImage x:Key="SideBarServerIcon" UriSource="pack://application:,,,/Images/sidebar/server.png"/>
+            <BitmapImage x:Key="SideBarOptionsIcon" UriSource="pack://application:,,,/Images/sidebar/options.png"/>
 
             <!-- Icons -->
             <BitmapImage x:Key="StopWhiteIcon" UriSource="pack://application:,,,/Images/material-design-icons/baseline_stop_white_24dp.png" />
             <BitmapImage x:Key="SendWhiteIcon" UriSource="pack://application:,,,/Images/material-design-icons/baseline_send_white_24dp.png" />
+
+            <!-- Social Icons -->
+            <BitmapImage x:Key="SocialDiscord" UriSource="pack://application:,,,/Images/social/discord.png"/>
+            <BitmapImage x:Key="SocialTwitter" UriSource="pack://application:,,,/Images/social/twitter.png"/>
+            <BitmapImage x:Key="SocialReddit" UriSource="pack://application:,,,/Images/social/reddit.png"/>
+            <BitmapImage x:Key="SocialWebsite"  UriSource="pack://application:,,,/Images/social/website.png"/>
+            <BitmapImage x:Key="SocialGithub" UriSource="pack://application:,,,/Images/social/github.png"/>
+            
+
+            <!-- Options -->
+            <BitmapImage x:Key="SubnauticaPathIcon" UriSource="pack://application:,,,/Images/options/subnauticaIcon.png" />
+            <BitmapImage x:Key="VrModeIcon" UriSource="pack://application:,,,/Images/options/VrIcon.png" />
 
             <!-- Pages TODO: Find another solution for the hard-coded viewbox values so that page background image aligns with sidebar and header -->
             <pages:LaunchGamePage x:Key="LaunchGamePage" Background="#FF28292C"/>
