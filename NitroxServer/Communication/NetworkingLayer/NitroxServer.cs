@@ -82,17 +82,19 @@ namespace NitroxServer.Communication.NetworkingLayer
                 await device.CreatePortMapAsync(new Mapping(Protocol.Udp, portNumber, portNumber, (int)TimeSpan.FromDays(1).TotalSeconds, "Nitrox Server - Subnautica"));
                 Log.Info($"Server port ({portNumber}) has been automatically opened on your router");
             }
-#if DEBUG
-            catch (Exception ex)
+            catch (MappingException ex)
             {
-                Log.Error($"Automatic port forwarding failed: {ex}");
+                switch (ex.ErrorCode)
+                {
+                    case ErrorCode.ConflictInMappingEntry:
+                        Log.Warn($"Automatic port forwarding failed, port conflict found. It is likely already open and no action is required");
+                        break;
+                    default:
+                        Log.Warn($"Automatic port forwarding failed, please manually port forward");
+                        break;
+
+                }
             }
-#else
-            catch (Exception)
-            {
-                Log.Error("Automatic port forwarding failed, please manually port forward");
-            }
-#endif
         }
     }
 }

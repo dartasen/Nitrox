@@ -6,7 +6,11 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using NitroxModel.Core;
 using NitroxModel.DataStructures;
 using NitroxModel.DataStructures.GameLogic;
+using NitroxModel.DataStructures.GameLogic.Buildings.Metadata;
+using NitroxModel.DataStructures.GameLogic.Buildings.Rotation;
 using NitroxModel.DataStructures.Util;
+using NitroxModel_Subnautica.DataStructures.GameLogic.Buildings.Rotation;
+using NitroxModel_Subnautica.DataStructures.GameLogic.Buildings.Rotation.Metadata;
 using NitroxServer.GameLogic;
 using NitroxServer.GameLogic.Bases;
 using NitroxServer.GameLogic.Entities;
@@ -46,6 +50,8 @@ namespace NitroxTest.Serialization
 
             worldData = GeneratePersistedWorldData();
             world = worldPersistence.CreateWorld(worldData, serverConfig.GameMode);
+            world.EventTriggerer.PauseEventTimers();
+            world.EventTriggerer.PauseWorldTime();
 
             worldsDataAfter = new PersistedWorldData[serverSerializers.Length];
             for (int index = 0; index < serverSerializers.Length; index++)
@@ -122,6 +128,17 @@ namespace NitroxTest.Serialization
                     Assert.AreEqual(itemData.ContainerId, itemDataAfter.ContainerId, "WorldData.InventoryData.StorageSlotItems.ContainerId is not equal");
                     Assert.AreEqual(itemData.ItemId, itemDataAfter.ItemId, "WorldData.InventoryData.StorageSlotItems.ItemId is not equal");
                     Assert.IsTrue(itemData.SerializedData.SequenceEqual(itemDataAfter.SerializedData), "WorldData.InventoryData.StorageSlotItems.SerializedData is not equal");
+                }
+
+                Assert.AreEqual(worldData.WorldData.InventoryData.Modules.Count, worldDataAfter.WorldData.InventoryData.Modules.Count, "WorldData.InventoryData.Modules.Count is not equal");
+                for (int index = 0; index < worldData.WorldData.InventoryData.Modules.Count; index++)
+                {
+                    EquippedItemData equippedItemData = worldData.WorldData.InventoryData.Modules[index];
+                    EquippedItemData equippedItemDataAfter = worldDataAfter.WorldData.InventoryData.Modules[index];
+
+                    Assert.AreEqual(equippedItemData.ContainerId, equippedItemDataAfter.ContainerId, "WorldData.InventoryData.Modules.ContainerId is not equal");
+                    Assert.AreEqual(equippedItemData.ItemId, equippedItemDataAfter.ItemId, "WorldData.InventoryData.Modules.ItemId is not equal");
+                    Assert.IsTrue(equippedItemData.SerializedData.SequenceEqual(equippedItemDataAfter.SerializedData), "WorldData.InventoryData.Modules.SerializedData is not equal");
                 }
             }
         }
@@ -211,9 +228,48 @@ namespace NitroxTest.Serialization
                     Assert.AreEqual(basePiece.ConstructionCompleted, basePieceAfter.ConstructionCompleted, "BaseData.CompletedBasePieceHistory.ConstructionCompleted is not equal");
                     Assert.AreEqual(basePiece.IsFurniture, basePieceAfter.IsFurniture, "BaseData.CompletedBasePieceHistory.IsFurniture is not equal");
                     Assert.AreEqual(basePiece.BaseId, basePieceAfter.BaseId, "BaseData.CompletedBasePieceHistory.BaseId is not equal");
-                    Assert.AreEqual(basePiece.RotationMetadata, basePieceAfter.RotationMetadata, "BaseData.CompletedBasePieceHistory.RotationMetadata is not equal");
-                    Assert.AreEqual(basePiece.Metadata, basePieceAfter.Metadata, "BaseData.CompletedBasePieceHistory.Metadata is not equal");
                     Assert.AreEqual(basePiece.BuildIndex, basePieceAfter.BuildIndex, "BaseData.CompletedBasePieceHistory.BuildIndex is not equal");
+
+                    switch (basePiece.RotationMetadata.Value)
+                    {
+                        case AnchoredFaceRotationMetadata anchoredMetadata when basePieceAfter.RotationMetadata.Value is AnchoredFaceRotationMetadata anchoredMetadataAfter:
+                            Assert.AreEqual(anchoredMetadata.Cell, anchoredMetadataAfter.Cell, "BaseData.RotationMetadata.Cell (AnchoredFaceRotationMetadata) is not equal");
+                            Assert.AreEqual(anchoredMetadata.Direction, anchoredMetadataAfter.Direction, "BaseData.RotationMetadata.Direction (AnchoredFaceRotationMetadata) is not equal");
+                            Assert.AreEqual(anchoredMetadata.FaceType, anchoredMetadataAfter.FaceType, "BaseData.RotationMetadata.FaceType (AnchoredFaceRotationMetadata) is not equal");
+                            break;
+                        case BaseModuleRotationMetadata baseModuleMetadata when basePieceAfter.RotationMetadata.Value is BaseModuleRotationMetadata baseModuleMetadataAfter:
+                            Assert.AreEqual(baseModuleMetadata.Cell, baseModuleMetadataAfter.Cell, "BaseData.RotationMetadata.Cell (BaseModuleRotationMetadata) is not equal");
+                            Assert.AreEqual(baseModuleMetadata.Direction, baseModuleMetadataAfter.Direction, "BaseData.RotationMetadata.Direction (BaseModuleRotationMetadata) is not equal");
+                            break;
+                        case CorridorRotationMetadata corridorMetadata when basePieceAfter.RotationMetadata.Value is CorridorRotationMetadata corridorMetadataAfter:
+                            Assert.AreEqual(corridorMetadata.Rotation, corridorMetadataAfter.Rotation, "BaseData.RotationMetadata.Rotation (CorridorRotationMetadata) is not equal");
+                            break;
+                        case MapRoomRotationMetadata mapRoomMetadata when basePieceAfter.RotationMetadata.Value is MapRoomRotationMetadata mapRoomMetadataAfter:
+                            Assert.AreEqual(mapRoomMetadata.CellType, mapRoomMetadataAfter.CellType, "BaseData.RotationMetadata.CellType (MapRoomRotationMetadata) is not equal");
+                            Assert.AreEqual(mapRoomMetadata.ConnectionMask, mapRoomMetadataAfter.ConnectionMask, "BaseData.RotationMetadata.ConnectionMask (MapRoomRotationMetadata) is not equal");
+                            break;
+                        case null when basePieceAfter.RotationMetadata.Value is null:
+                            break;
+                        default:
+                            Assert.Fail("BaseData.RotationMetadata is not equal");
+                            break;
+                    }
+
+                    switch (basePiece.Metadata.Value)
+                    {
+                        case SignMetadata signMetadata when basePieceAfter.Metadata.Value is SignMetadata signMetadataAfter:
+                            Assert.AreEqual(signMetadata.Text, signMetadataAfter.Text, "BaseData.Metadata.Text (SignMetadata) is not equal");
+                            Assert.AreEqual(signMetadata.ColorIndex, signMetadataAfter.ColorIndex, "BaseData.Metadata.ColorIndex (SignMetadata) is not equal");
+                            Assert.AreEqual(signMetadata.ScaleIndex, signMetadataAfter.ScaleIndex, "BaseData.Metadata.ScaleIndex (SignMetadata) is not equal");
+                            Assert.IsTrue(signMetadata.Elements.SequenceEqual(signMetadataAfter.Elements), "BaseData.Metadata.Elements (SignMetadata) is not equal");
+                            Assert.AreEqual(signMetadata.Background, signMetadataAfter.Background, "BaseData.Metadata.Background (SignMetadata) is not equal");
+                            break;
+                        case null when basePieceAfter.Metadata.Value is null:
+                            break;
+                        default:
+                            Assert.Fail("BaseData.Metadata is not equal");
+                            break;
+                    }
                 }
             }
         }
@@ -309,11 +365,14 @@ namespace NitroxTest.Serialization
                 {
                     CompletedBasePieceHistory = new List<BasePiece>()
                     {
-                        new BasePiece(new NitroxId(), NitroxVector3.Zero, NitroxQuaternion.Identity, NitroxVector3.Zero, NitroxQuaternion.Identity, new NitroxTechType("BasePiece1"), Optional.Empty, false, Optional.Empty)
+                        new BasePiece(new NitroxId(), NitroxVector3.Zero, NitroxQuaternion.Identity, NitroxVector3.Zero, NitroxQuaternion.Identity, new NitroxTechType("BasePiece1"), Optional<NitroxId>.Of(new NitroxId()), false, Optional.Empty)
                     },
                     PartiallyConstructedPieces = new List<BasePiece>()
                     {
-                        new BasePiece(new NitroxId(), NitroxVector3.One, NitroxQuaternion.Identity, NitroxVector3.One, NitroxQuaternion.Identity, new NitroxTechType("BasePiece2"), Optional.Empty, false, Optional.Empty)
+                        new BasePiece(new NitroxId(), NitroxVector3.One, NitroxQuaternion.Identity, NitroxVector3.One, NitroxQuaternion.Identity, new NitroxTechType("BasePiece2"), Optional.Empty, false, Optional<RotationMetadata>.Of(new AnchoredFaceRotationMetadata(new NitroxInt3(1,2,3), 1, 2))),
+                        new BasePiece(new NitroxId(), NitroxVector3.One, NitroxQuaternion.Identity, NitroxVector3.One, NitroxQuaternion.Identity, new NitroxTechType("BasePiece2"), Optional.Empty, false, Optional<RotationMetadata>.Of(new BaseModuleRotationMetadata(new NitroxInt3(1,2,3), 1))),
+                        new BasePiece(new NitroxId(), NitroxVector3.One, NitroxQuaternion.Identity, NitroxVector3.One, NitroxQuaternion.Identity, new NitroxTechType("BasePiece2"), Optional.Empty, false, Optional<RotationMetadata>.Of(new CorridorRotationMetadata(2))),
+                        new BasePiece(new NitroxId(), NitroxVector3.One, NitroxQuaternion.Identity, NitroxVector3.One, NitroxQuaternion.Identity, new NitroxTechType("BasePiece2"), Optional.Empty, false, Optional<RotationMetadata>.Of(new MapRoomRotationMetadata(0x20, 2)))
                     }
                 },
                 EntityData = new EntityData()
@@ -429,9 +488,10 @@ namespace NitroxTest.Serialization
                     {
                         Vehicles = new List<VehicleModel>()
                         {
-                            new VehicleModel(new NitroxTechType("Cyclops"), new NitroxId(), NitroxVector3.One, NitroxQuaternion.Identity, new InteractiveChildObjectIdentifier[0], Optional.Empty, "Super Duper Cyclops", new []{NitroxVector3.Zero, NitroxVector3.One, NitroxVector3.One}, 100)
+                            new VehicleModel(new NitroxTechType("Cyclops"), new NitroxId(), NitroxVector3.One, NitroxQuaternion.Identity, new InteractiveChildObjectIdentifier[0], Optional<NitroxId>.Of(new NitroxId()), "Super Duper Cyclops", new []{NitroxVector3.Zero, NitroxVector3.One, NitroxVector3.One}, 100)
                         }
-                    }
+                    },
+                    Seed = "NITROXSEED"
                 }
             };
         }
