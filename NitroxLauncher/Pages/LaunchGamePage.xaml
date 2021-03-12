@@ -71,7 +71,7 @@
                 <Border CornerRadius="6" Background="#0CFFFFFF">
                     <TextBlock Foreground="White" Margin="120,54,0,54" Width="24" HorizontalAlignment="Left" Style="{DynamicResource SocialButton}" >
                     <Hyperlink NavigateUri="https://discord.gg/E8B4X9s" RequestNavigate="OnRequestNavigate" ToolTip="Join the Discord Server" Foreground="White" TextDecorations="{x:Null}">
-                        <Image Source="{DynamicResource SocialDiscord}" Width="24" HorizontalAlignment="Left" />
+                        <Image Source="{StaticResource SocialDiscord}" Width="24" HorizontalAlignment="Left" />
                     </Hyperlink>
                     </TextBlock>
                 </Border>

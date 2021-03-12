@@ -285,7 +285,7 @@ namespace NitroxLauncher
         private Process StartSubnautica()
         {
             string subnauticaExe = Path.Combine(subnauticaPath, "Subnautica.exe");
-            ProcessStartInfo startInfo = new ProcessStartInfo
+            ProcessStartInfo startInfo = new()
             {
                 WorkingDirectory = subnauticaPath,
                 Arguments = "",
@@ -307,10 +307,11 @@ namespace NitroxLauncher
 
                 default:
                     Log.Error("Failed to retrieve Platform through PlatformDetection, is it updated ?");
-                    break;
+                    throw new Exception("Unable to retrieve the platform that runs Subnautica");
             }
 
-            startInfo.Arguments += "-vrmode none";
+            Log.Info($"Starting the game using {VrMode} VR mode");
+            startInfo.Arguments += (VrMode.GetAttribute<DescriptionAttribute>()?.Description) ?? "-vrmode none";
 
             return Process.Start(startInfo);
         }

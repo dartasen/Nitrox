@@ -10,7 +10,7 @@
                          Title="OptionPage"
                          Loaded="OptionPage_OnLoaded"
                          Unloaded="OptionPage_OnUnloaded">
-
+   
     <Grid>
         <Grid Margin="22,0">
             <Grid.RowDefinitions>
@@ -75,10 +75,12 @@
                             <TextBlock FontSize="16" Foreground="White" Margin="0,12,0,8" Text="VR Mode" />
                             <ComboBox Name="VRCombo" HorizontalAlignment="Left" Width="100"
                                       SelectedValue="{Binding VrMode, Mode=OneWay}"
-                                      SelectionChanged="VRCombo_SelectionChanged" />
+                                      SelectionChanged="VRCombo_SelectionChanged"
+                                      Style="{StaticResource ComboBoxFlatStyle}"/>
                         </StackPanel>
                     </Grid>
                 </Border>
+
             </StackPanel>
         </Grid>
     </Grid>
