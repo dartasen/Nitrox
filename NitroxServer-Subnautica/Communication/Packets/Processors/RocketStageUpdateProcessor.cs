@@ -25,7 +25,15 @@ namespace NitroxServer_Subnautica.Communication.Packets.Processors
 
             if (opRocket.HasValue)
             {
-                opRocket.Value.CurrentStage = packet.NewStage;
+                if (packet.NewStage > opRocket.Value.CurrentStage)
+                {
+                    opRocket.Value.CurrentStage = packet.NewStage;
+                }
+                else
+                {
+                    Log.Error($"{nameof(RocketStageUpdateProcessor)}: Received invalid data to update existing rocket {packet.Id}");
+                    packet.NewStage = opRocket.Value.CurrentStage;
+                }
             }
             else
             {

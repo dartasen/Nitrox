@@ -8,8 +8,8 @@ namespace NitroxModel_Subnautica.Packets
     public class RocketStageUpdate : Packet
     {
         public NitroxId Id { get; }
-        public int NewStage { get; }
-        public TechType CurrentStageTech { get; }
+        public int NewStage { get; set; }
+        public TechType CurrentStageTech { get; set;  }
 
         public RocketStageUpdate(NitroxId id, int newStage, TechType currentStageTech)
         {
