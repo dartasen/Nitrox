@@ -159,6 +159,7 @@
     <Compile Include="GameLogic\Bases\Spawning\BasePiece\BasePieceSpawnProcessor.cs" />
     <Compile Include="GameLogic\Bases\Spawning\BasePiece\BaseWaterParkProcessor.cs" />
     <Compile Include="GameLogic\Bases\Spawning\BasePiece\MapRoomSpawnProcessor.cs" />
+    <Compile Include="GameLogic\Bases\Spawning\BasePiece\BaseNuclearReactorSpawnProcessor.cs" />
     <Compile Include="GameLogic\Bases\Spawning\Furniture\BenchSpawnProcessor.cs" />
     <Compile Include="GameLogic\Bases\Spawning\Furniture\FurnitureSpawnProcessor.cs" />
     <Compile Include="GameLogic\Building.cs" />
