@@ -13,8 +13,8 @@ namespace NitroxClient.Communication.NetworkingLayer.LiteNetLib
     {
         public bool IsConnected { get; private set; }
 
-        private readonly NetPacketProcessor netPacketProcessor = new NetPacketProcessor();
-        private readonly AutoResetEvent connectedEvent = new AutoResetEvent(false);
+        private readonly NetPacketProcessor netPacketProcessor = new();
+        private readonly AutoResetEvent connectedEvent = new(false);
         private readonly PacketReceiver packetReceiver;
         private readonly INetworkDebugger networkDebugger;
 
@@ -34,7 +34,7 @@ namespace NitroxClient.Communication.NetworkingLayer.LiteNetLib
 
             netPacketProcessor.SubscribeReusable<WrapperPacket, NetPeer>(OnPacketReceived);
 
-            EventBasedNetListener listener = new EventBasedNetListener();
+            EventBasedNetListener listener = new();
             listener.PeerConnectedEvent += Connected;
             listener.PeerDisconnectedEvent += Disconnected;
             listener.NetworkReceiveEvent += ReceivedNetworkData;
@@ -59,7 +59,6 @@ namespace NitroxClient.Communication.NetworkingLayer.LiteNetLib
         {
             networkDebugger?.PacketSent(packet);
             client.SendToAll(netPacketProcessor.Write(packet.ToWrapperPacket()), NitroxDeliveryMethod.ToLiteNetLib(packet.DeliveryMethod));
-            client.Flush();
         }
 
         public void Stop()

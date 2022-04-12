@@ -11,15 +11,22 @@
 
         public static LiteNetLib.DeliveryMethod ToLiteNetLib(DeliveryMethod deliveryMethod)
         {
-            switch (deliveryMethod)
+            return deliveryMethod switch
             {
-                case DeliveryMethod.UNRELIABLE_SEQUENCED:
-                    return LiteNetLib.DeliveryMethod.Sequenced;
-                case DeliveryMethod.RELIABLE_ORDERED:
-                    return LiteNetLib.DeliveryMethod.ReliableOrdered;
-                default:
-                    return LiteNetLib.DeliveryMethod.ReliableOrdered;
-            }
+                DeliveryMethod.UNRELIABLE_SEQUENCED => LiteNetLib.DeliveryMethod.Sequenced,
+                DeliveryMethod.RELIABLE_ORDERED => LiteNetLib.DeliveryMethod.ReliableOrdered,
+                _ => LiteNetLib.DeliveryMethod.ReliableOrdered,
+            };
+        }
+
+        public static DeliveryMethod ToNitrox(LiteNetLib.DeliveryMethod deliveryMethod)
+        {
+            return deliveryMethod switch
+            {
+                LiteNetLib.DeliveryMethod.Sequenced => DeliveryMethod.UNRELIABLE_SEQUENCED,
+                LiteNetLib.DeliveryMethod.ReliableOrdered => DeliveryMethod.UNRELIABLE_SEQUENCED,
+                _ => DeliveryMethod.RELIABLE_ORDERED,
+            };
         }
     }
 }
