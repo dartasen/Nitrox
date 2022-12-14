@@ -85,6 +85,11 @@ namespace NitroxLauncher.Models.Utils
             }
         }
 
+        private static bool IsHamachiConfigured()
+        {
+            
+        }
+
         private static void CheckFirewallRules(FirewallDirection direction)
         {
             CheckClientFirewallRules(direction);
@@ -92,7 +97,7 @@ namespace NitroxLauncher.Models.Utils
             CheckHamachiFirewallRules(direction);
         }
 
-        private static void CheckServerFirewallRules(FirewallDirection direction)
+        public static void CheckServerFirewallRules(FirewallDirection direction)
         {
             string serverPath = Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), ServerLogic.SERVER_EXECUTABLE);
 

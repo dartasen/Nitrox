@@ -60,6 +60,7 @@ namespace NitroxLauncher
                 // Tools like WinRAR do this to support running EXE files while it's still zipped.
                 if (Directory.GetCurrentDirectory().StartsWith(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase))
                 {
+                    Log.Error("Nitrox launcher was executed from a temporary directory");
                     MessageBox.Show("Nitrox launcher should not be executed from a temporary directory. Install Nitrox launcher properly by extracting ALL files and moving these to a dedicated location on your PC.",
                                     "Invalid working directory",
                                     MessageBoxButton.OK,
@@ -85,12 +86,7 @@ namespace NitroxLauncher
 
                     FrameContent = webBrowser;
 
-                    string embed = "<html><head>" +
-                                   "<meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"/>" +
-                                   "</head><body>" +
-                                   $"<iframe width=\"{webBrowser.Width - 24}\" height=\"{webBrowser.Height - 24}\" src=\"{{0}}\"" +
-                                   "frameborder = \"0\" allow = \"autoplay; encrypted-media\" allowfullscreen></iframe>" +
-                                   "</body></html>";
+                    string embed = $"<html><head><meta http-equiv=\"X-UA-Compatible\" content=\"IE=Edge\"/></head><body><iframe width=\"{webBrowser.Width - 24}\" height=\"{webBrowser.Height - 24}\" src=\"{{0}}\"frameborder = \"0\" allow = \"autoplay; encrypted-media\" allowfullscreen></iframe></body></html>";
                     webBrowser.NavigateToString(string.Format(embed, "https://www.youtube.com/embed/i8ju_10NkGY?autoplay=1&loop=1&showinfo=0&controls=0"));
                     SideBarPanel.Visibility = Visibility.Hidden;
                 };

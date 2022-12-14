@@ -93,7 +93,8 @@ namespace NitroxLauncher
 
             if (task.Exception != null)
             {
-                MessageBox.Show($"An error occurred configuring the firewall: {task.Exception}");
+                Log.Error($"An error occurred configuring the firewall: {task.Exception}");
+                LauncherNotifier.Error($"An error ocurred while configuring the firewall");
             }
         }
 
