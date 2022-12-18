@@ -18,6 +18,7 @@ using System.Windows.Threading;
 using NitroxLauncher.Models.Utils;
 using System.Windows.Controls;
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace NitroxLauncher
 {
@@ -85,15 +86,42 @@ namespace NitroxLauncher
             }, CancellationToken.None, TaskCreationOptions.None, TaskScheduler.FromCurrentSynchronizationContext());
         }
 
-        [Conditional("RELEASE")]
         public async void ConfigureFirewall()
         {
-            Task task = Task.Run(() => WindowsHelper.CheckFirewallRules());
-            await task;
+            Log.Info($"Using {Environment.OSVersion}");
 
-            if (task.Exception != null)
+            if (Environment.OSVersion.Platform != PlatformID.Win32NT)
             {
-                MessageBox.Show($"An error occurred configuring the firewall: {task.Exception}");
+                return;
+            }
+
+            // Target Windows 7 => 8
+            if (Environment.OSVersion.Version.Major == 6)
+            {
+                return;
+            }
+
+            try
+            {
+                Task task = Task.Run(() => WindowsHelper.CheckFirewallRules());
+
+                await task;
+
+                if (task.Exception != null)
+                {
+                    throw task.Exception;
+                }
+
+            }
+            catch (ExternalException ex)
+            {
+                Log.Error(ex, $"Error while configuring firewall : {Environment.OSVersion}");
+                LauncherNotifier.Error("Fatal error while configuring firewall");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Error while configuring firewall");
+                LauncherNotifier.Error("Fatal error while configuring firewall");
             }
         }
 

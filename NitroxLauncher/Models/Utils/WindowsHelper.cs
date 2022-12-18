@@ -13,6 +13,7 @@ using WindowsFirewallHelper.Addresses;
 using WindowsFirewallHelper.FirewallRules;
 using NitroxModel;
 using NitroxModel.Helper;
+using System.Runtime.InteropServices;
 
 namespace NitroxLauncher.Models.Utils
 {
@@ -72,6 +73,7 @@ namespace NitroxLauncher.Models.Utils
         {
             try
             {
+                throw new COMException("tesrt");
                 CheckFirewallRules(FirewallDirection.Inbound);
                 CheckFirewallRules(FirewallDirection.Outbound);
             }
@@ -82,6 +84,11 @@ namespace NitroxLauncher.Models.Utils
             catch (UnauthorizedAccessException)
             {
                 MessageBox.Show("Try restarting the launcher as administrator or manually adding firewall rules for Nitrox programs. This warning won't be shown again.", "Error adding Windows Firewall rules", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            catch (ExternalException ex)
+            {
+                Log.Error(ex, $"External exception happened, OS: {Environment.OSVersion}");
+                LauncherNotifier.Error("Fatal error while configuring firewall");
             }
         }
 
