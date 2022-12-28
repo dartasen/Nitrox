@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +46,7 @@ namespace NitroxClient.Communication
         {
             static void ReceivedResponse(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
             {
-                if (messageType != UnconnectedMessageType.DiscoveryResponse)
+                if (messageType != UnconnectedMessageType.Broadcast)
                 {
                     return;
                 }
@@ -71,7 +71,7 @@ namespace NitroxClient.Communication
             EventBasedNetListener listener = new();
             NetManager client = new(listener) { 
                 AutoRecycle = true, 
-                DiscoveryEnabled = true,
+                BroadcastReceiveEnabled = true,
                 UnconnectedMessagesEnabled = true
             };
             // Try start client on an available, predefined, port
@@ -98,7 +98,7 @@ namespace NitroxClient.Communication
                     writer.Put(LANDiscoveryConstants.BROADCAST_REQUEST_STRING);
                     foreach (int port in LANDiscoveryConstants.BROADCAST_PORTS)
                     {
-                        client.SendDiscoveryRequest(writer, port);
+                        client.SendBroadcast(writer, port);
                     }
                     try
                     {

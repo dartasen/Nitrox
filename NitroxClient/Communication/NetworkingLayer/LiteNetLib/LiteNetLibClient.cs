@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using System.Threading.Tasks;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -62,9 +62,10 @@ namespace NitroxClient.Communication.NetworkingLayer.LiteNetLib
 
         public void Send(Packet packet)
         {
+#if DEBUG
             networkDebugger?.PacketSent(packet);
+#endif
             client.SendToAll(netPacketProcessor.Write(packet.ToWrapperPacket()), NitroxDeliveryMethod.ToLiteNetLib(packet.DeliveryMethod));
-            client.Flush();
         }
 
         public void Stop()

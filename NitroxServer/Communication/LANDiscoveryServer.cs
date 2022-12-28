@@ -1,4 +1,4 @@
-﻿using System.Net;
+using System.Net;
 using System.Threading;
 using LiteNetLib;
 using LiteNetLib.Utils;
@@ -19,7 +19,7 @@ namespace NitroxServer.Communication
             server = new NetManager(listener);
 
             server.AutoRecycle = true;
-            server.DiscoveryEnabled = true;
+            server.BroadcastReceiveEnabled = true;
             server.UnconnectedMessagesEnabled = true;
 
             for (int i = 0; i < LANDiscoveryConstants.BROADCAST_PORTS.Length; i++)
@@ -41,7 +41,7 @@ namespace NitroxServer.Communication
 
         private static void NetworkReceiveUnconnected(IPEndPoint remoteEndPoint, NetPacketReader reader, UnconnectedMessageType messageType)
         {
-            if (messageType == UnconnectedMessageType.DiscoveryRequest)
+            if (messageType == UnconnectedMessageType.Broadcast)
             {
                 string requestString = reader.GetString();
                 if (requestString == LANDiscoveryConstants.BROADCAST_REQUEST_STRING)
@@ -50,7 +50,7 @@ namespace NitroxServer.Communication
                     writer.Put(LANDiscoveryConstants.BROADCAST_RESPONSE_STRING);
                     writer.Put(Server.Instance.Port);
 
-                    server.SendDiscoveryResponse(writer, remoteEndPoint);
+                    server.SendBroadcast(writer, remoteEndPoint.Port);
                 }
             }
         }
