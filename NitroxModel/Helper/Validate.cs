@@ -1,4 +1,4 @@
-﻿extern alias JB;
+extern alias JB;
 using System;
 using System.Runtime.CompilerServices;
 using JB::JetBrains.Annotations;

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.IO;
 using System.Net.NetworkInformation;
@@ -10,7 +10,9 @@ using System.Windows.Controls;
 using NitroxLauncher.Models.Events;
 using NitroxLauncher.Models.Properties;
 using NitroxLauncher.Pages;
+using NitroxModel;
 using NitroxModel.Discovery;
+using NitroxModel.Discovery.Abstract;
 using NitroxModel.Helper;
 
 namespace NitroxLauncher
@@ -113,7 +115,7 @@ namespace NitroxLauncher
             logic.SetTargetedSubnauticaPath(NitroxUser.GamePath)
                  .ContinueWith(task =>
                  {
-                     if (GameInstallationFinder.IsSubnauticaDirectory(task.Result))
+                     if (AbstractPlatformGameFinder.IsGameDirectory(task.Result, GameInfo.Subnautica))
                      {
                          LauncherLogic.Instance.NavigateTo<LaunchGamePage>();
                      }

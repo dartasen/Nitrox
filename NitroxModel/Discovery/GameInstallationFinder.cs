@@ -1,59 +1,50 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using NitroxModel.Discovery.Abstract;
 using NitroxModel.Discovery.InstallationFinders;
 
-namespace NitroxModel.Discovery
+namespace NitroxModel.Discovery;
+
+public class AbstractPlatformGameFinder
 {
-    /// <summary>
-    ///     Main game installation finder that will use all available methods of detection to find the Subnautica installation
-    ///     directory.
-    /// </summary>
-    public class GameInstallationFinder : IFindGameInstallation
+    private static readonly Lazy<AbstractPlatformGameFinder> instance = new(() => new AbstractPlatformGameFinder());
+    public static AbstractPlatformGameFinder Instance => instance.Value;
+
+    private readonly Dictionary<Platform, PlatformGameFinder> gamepathByPlatform = new()
     {
-        private static readonly Lazy<GameInstallationFinder> instance = new(() => new GameInstallationFinder());
-        public static GameInstallationFinder Instance => instance.Value;
+        { Platform.STEAM, new SteamGameRegistryFinder() },
+        { Platform.EPIC, new EpicGamesInstallationFinder() },
+        { Platform.DISCORD, new DiscordGameFinder() },
+    };
 
-        /// <summary>
-        ///     The order of these finders is VERY important. Only change if you know what you're doing.
-        /// </summary>
-        private readonly IFindGameInstallation[] finders = {
-            new GameInCurrentDirectoryFinder(),
-            new ConfigGameFinder(),
-            new SteamGameRegistryFinder(),
-            new EpicGamesInstallationFinder(),
-            new DiscordGameFinder(),
-            new EnvironmentGameFinder()
-        };
+    [Obsolete("Old fashionned way")]
+    public GameInstall FindGame()
+    {
 
-        public string FindGame(IList<string> errors = null)
+    }
+
+    public string FindGame(GameInfo gameInfo, params Platform[] platform)
+    {
+        if (gameInfo == null)
         {
-            errors ??= new List<string>();
-            foreach (IFindGameInstallation finder in finders)
-            {
-                string path = finder.FindGame(errors);
-                if (path == null)
-                {
-                    continue;
-                }
-
-                errors.Clear();
-                return Path.GetFullPath(path);
-            }
-
-            return null;
+            throw new ArgumentNullException(nameof(gameInfo));
         }
 
-        public static bool IsSubnauticaDirectory(string directory)
-        {
-            if (string.IsNullOrWhiteSpace(directory))
-            {
-                return false;
-            }
+        List<GameInstall> path = new();
+        //return Path.GetFullPath(path);
 
-            return Directory.EnumerateFiles(directory, "*.exe")
-                .Any(file => Path.GetFileName(file)?.Equals("subnautica.exe", StringComparison.OrdinalIgnoreCase) ?? false);
+        return null;
+    }
+
+    public static bool IsGameDirectory(string directory, GameInfo game)
+    {
+        if (string.IsNullOrWhiteSpace(directory) || game == null)
+        {
+            return false;
         }
+
+        return Directory.EnumerateFiles(directory, "*.exe").Any(file => Path.GetFileName(file)?.Equals(game.ExeName, StringComparison.OrdinalIgnoreCase) ?? false);
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
 using NitroxModel.Discovery;
+using NitroxModel.Discovery.Abstract;
 using NitroxModel.Platforms.OS.Windows.Internal;
 using NitroxModel.Platforms.Store;
 using NitroxModel.Platforms.Store.Interfaces;
@@ -75,7 +76,7 @@ namespace NitroxModel.Helper
                 }
 
                 List<string> errors = new();
-                string path = GameInstallationFinder.Instance.FindGame(errors);
+                string path = AbstractPlatformGameFinder.Instance.FindGame(errors);
                 if (!string.IsNullOrWhiteSpace(path) && Directory.Exists(path))
                 {
                     return gamePath = path;
