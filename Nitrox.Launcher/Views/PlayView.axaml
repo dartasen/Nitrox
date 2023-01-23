@@ -2,12 +2,102 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:viewModels="clr-namespace:Nitrox.Launcher.ViewModels"
+             xmlns:design="clr-namespace:Nitrox.Launcher.Models.Design"
              x:Class="Nitrox.Launcher.Views.PlayView"
              d:DataContext="{Binding RelativeSource={RelativeSource AncestorType=viewModels:PlayViewModel}}">
-    
-    <StackPanel HorizontalAlignment="Center"
-                VerticalAlignment="Center">
-        <TextBlock Text="{Binding Greeting}" />
-        <TextBlock Text="{Binding UrlPathSegment}" />
-    </StackPanel>
+  
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="22*"/>
+      <ColumnDefinition Width="675*"/>
+      <ColumnDefinition Width="22*"/>
+    </Grid.ColumnDefinitions>
+
+    <Grid.RowDefinitions>
+      <RowDefinition Height="0" />
+      <RowDefinition Height="475" />
+      <RowDefinition Height="539" />
+    </Grid.RowDefinitions>
+
+    <Image Stretch="UniformToFill" Source="/Assets/Images/play-page/PlayGameImage.png" Margin="0,0,0,22" Grid.Row="1" Grid.ColumnSpan="3" />
+
+    <Grid Grid.Row="1" VerticalAlignment="Top" Height="644" Grid.Column="1" RenderTransformOrigin="0.503,0.447" Margin="0,370,0,0" Grid.RowSpan="2">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="123*"/>
+        <RowDefinition Height="84*"/>
+        <RowDefinition Height="115*"/>
+      </Grid.RowDefinitions>
+
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="0*"/>
+        <ColumnDefinition Width="174*"/>
+        <ColumnDefinition Width="203*"/>
+        <ColumnDefinition Width="342*"/>
+        <ColumnDefinition Width="0*"/>
+      </Grid.ColumnDefinitions>
+
+      <TextBlock FontSize="14" Foreground="White" TextWrapping="Wrap" Grid.Column="1" Margin="0,112,20,0" Height="87" VerticalAlignment="Top" Grid.ColumnSpan="2">
+        <Run>Nitrox is an open-source, multiplayer modification for the game Subnautica.</Run>
+        <Run>The project is maintained by the community with regular support and updates from the generous contributors.</Run>
+      </TextBlock>
+     </Grid>
+
+      <StackPanel Orientation="Vertical" Grid.Column="3" Margin="0" Height="203" VerticalAlignment="Top">
+        <StackPanel.Background>
+          <ImageBrush Source="/Assets/Images/play-page/PlayBoxImage.png" />
+        </StackPanel.Background>
+
+        <Grid VerticalAlignment="Top" Margin="22,18,22,0">
+          <StackPanel Orientation="Vertical" HorizontalAlignment="Left" >
+            <TextBlock Foreground="#7FFFFFFF" Text="PLAY NITROX" FontSize="10" FontWeight="Bold" />
+            <TextBlock x:Name="NitroxVersionLabel" Foreground="White" FontSize="10" Text="{Binding Version, Mode=OneTime, FallbackValue='PHASE x.x.x.x'}" />
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
+            <TextBlock>I'm an image</TextBlock>
+          </StackPanel>
+        </Grid>
+
+        <Button Classes="nitrox primary big" ToolTip.Tip="Launch Subnautica with multiplayer enabled" Background="#FF007BFF" HorizontalAlignment="Stretch" Margin="24 16 24 8" Height="62">
+          <Panel>
+            <TextBlock HorizontalAlignment="Center" FontSize="16" FontWeight="Bold" Foreground="White" Text="PLAY" />
+            <TextBlock HorizontalAlignment="Center" FontSize="10" Text="MULTIPLAYER" />
+          </Panel>
+        </Button>
+
+        <Button Classes="nitrox big" Background="#19FFFFFF" BorderBrush="#66FFFFFF" ToolTip.Tip="Launch Subnautica" HorizontalAlignment="Stretch" Margin="24 0 24 24" Height="48">
+          <TextBlock Padding="0,4,0,0" Foreground="White" Margin="0,-4,0,0"  FontSize="14" Text="Singleplayer" />
+        </Button>
+
+      </StackPanel>
+
+      <Grid Grid.Row="1" Grid.ColumnSpan="4">
+        <Image Stretch="UniformToFill" Source="/Assets/Images/play-page/NitroxGallery.png" Margin="0,0,0,22" Grid.Row="1" Grid.ColumnSpan="3" />
+      </Grid>
+
+      <StackPanel Margin="0,11,0,0" Grid.Column="1" HorizontalAlignment="Left" Width="171" Height="44" VerticalAlignment="Top" Grid.Row="2">
+        <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" Text="Contributors" />
+      </StackPanel>
+
+      <StackPanel Margin="0,11,0,0" Grid.Column="2" HorizontalAlignment="Left" Width="545" Grid.Row="2" Grid.ColumnSpan="2">
+        <TextBlock FontSize="10" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold" Text="DEVELOPERS" />
+        <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+          Sunrunner, Killzoms, Jannify, Marijn, Measurity, MadMax, Nes, _HeN_, dartasen, CatSZekely, Garsia, RabidCrab, AquariusSidhe, Amarok, iCleeem, Tornac, TwinBuilderOne
+        </TextBlock>
+
+        <TextBlock FontSize="10" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold" Text="STAFF" />
+        <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+          Werewolfs, Shalix, CriticalCookie, InfamousJay, and a big thanks to the discord support team (Artic-Peepers, Peepers)
+        </TextBlock>
+
+        <TextBlock FontSize="10" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold" Text="DESIGN" />
+        <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+          Rux, dartasen
+        </TextBlock>
+
+      </StackPanel>
+
+    <Image Stretch="Uniform" Source="/Assets/Images/play-page/SubnauticaMain.png" Height="48" VerticalAlignment="Center" Margin="193,197,192,230" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Center" Width="334" />
+  </Grid>
+  
 </UserControl>
