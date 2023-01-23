@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reactive;
 using System.Reactive.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Nitrox.Launcher.Models.Design;
@@ -19,6 +20,11 @@ public partial class MainWindow : WindowBase<MainWindowViewModel>
 
     public MainWindow()
     {
+        // Press F12 to open dev tools
+#if DEBUG
+        this.AttachDevTools();
+#endif
+
         // Handle thrown exceptions so they aren't hidden.
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
         {
