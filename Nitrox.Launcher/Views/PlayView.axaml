@@ -4,10 +4,56 @@
              xmlns:viewModels="clr-namespace:Nitrox.Launcher.ViewModels"
              x:Class="Nitrox.Launcher.Views.PlayView"
              d:DataContext="{Binding RelativeSource={RelativeSource AncestorType=viewModels:PlayViewModel}}">
-    
-    <StackPanel HorizontalAlignment="Center"
-                VerticalAlignment="Center">
-        <TextBlock Text="{Binding Greeting}" />
-        <TextBlock Text="{Binding UrlPathSegment}" />
-    </StackPanel>
+
+  <Panel>
+    <Grid RowDefinitions="2*,*,*" ColumnDefinitions="*,*,*">
+
+      <Panel Grid.Row="0" Grid.ColumnSpan="3" RenderTransformOrigin="0.503,0.447">
+        <Panel.Background>
+          <ImageBrush Stretch="UniformToFill" Source="/Assets/Images/PlayGameImage.png" />
+        </Panel.Background>
+
+        <Image MaxHeight="80" Source="/Assets/Images/SubnauticaMain.png" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+      </Panel>
+
+      <Panel Grid.Row="1">
+        <TextBlock>Nitrox is an open-source, multiplayer modification for the game Subnautica.</TextBlock>
+        <StackPanel>
+
+        </StackPanel>
+      </Panel>
+
+      <Grid Grid.Row="2" Grid.ColumnSpan="3" RowDefinitions="*,*" ColumnDefinitions="*,*">
+
+        <Image Grid.Row="0" Grid.ColumnSpan="2" Stretch="UniformToFill" Source="/Assets/Images/nitroxGallery.png" />
+
+        <TextBlock Grid.Row="1" Grid.Column="0" FontSize="14" FontWeight="Bold" Text="Contributors" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+        <StackPanel Grid.Row="1" Grid.Column="1">
+          <TextBlock FontSize="10" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold">
+            <Run Text="DEVELOPERS"/>
+          </TextBlock>
+          <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+            <Run>Sunrunner, Killzoms, Jannify, Marijn, Measurity, MadMax, Nes, _HeN_, dartasen, CatSZekely, Garsia, RabidCrab, AquariusSidhe, Amarok, iCleeem, Tornac, TwinBuilderOne</Run>
+          </TextBlock>
+
+          <TextBlock FontSize="10" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold">
+            <Run Text="STAFF"/>
+          </TextBlock>
+          <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+            <Run>Werewolfs, Shalix, CriticalCookie, InfamousJay, and a big thanks to the discord support team (Artic-Peepers, Peepers)</Run>
+          </TextBlock>
+
+          <TextBlock FontSize="10" Foreground="#7FFFFFFF" Margin="0,0,0,6" FontWeight="Bold">
+            <Run Text="DESIGN"/>
+          </TextBlock>
+          <TextBlock FontSize="14" Foreground="White" Margin="0,0,0,12" TextWrapping="Wrap" LineHeight="24">
+            <Run>Rux</Run>
+          </TextBlock>
+        </StackPanel>
+
+      </Grid>
+
+    </Grid>
+  </Panel>
 </UserControl>
