@@ -13,7 +13,6 @@ namespace NitroxModel.Platforms.OS.Shared;
 
 public class ProcessEx : IDisposable
 {
-    private const int PROC_ALL_PIDS = 1;
     private readonly ProcessExBase implementation;
 
     public int Id => implementation.Id;
@@ -159,7 +158,7 @@ public class ProcessEx : IDisposable
             {
                 try
                 {
-                    ProcessEx processEx = new ProcessEx(pid);
+                    ProcessEx processEx = new(pid);
                     if (comparer.Compare(procName, processEx.Name) == 0)
                     {
                         if (predicate == null || predicate(processEx))
@@ -179,42 +178,45 @@ public class ProcessEx : IDisposable
 
     private static ProcessEx GetFirstProcessMacOS(string procName, Func<ProcessEx, bool> predicate, StringComparer comparer)
     {
-        // Use process_listpids to get all PIDs
         int[] pids = new int[1024];
-        int bytesNeeded = 0;
-        if (process_listpids(PROC_ALL_PIDS, 0, pids, pids.Length * sizeof(int), ref bytesNeeded) > 0)
-        {
-            int numProcesses = bytesNeeded / sizeof(int);
-            for (int i = 0; i < numProcesses; i++)
-            {
-                int pid = pids[i];
-                if (pid == 0)
-                {
-                    continue;
-                }
 
-                try
+        int numProcesses = proc_listallpids(pids, pids.Length * sizeof(int));
+        if (numProcesses == -1)
+        {
+            return null;
+        }
+        
+        for (int i = 0; i < numProcesses; i++)
+        {
+            int pid = pids[i];
+            if (pid == 0)
+            {
+                continue;
+            }
+
+            try
+            {
+                ProcessEx processEx = new ProcessEx(pid);
+                if (comparer.Compare(procName, processEx.Name) == 0)
                 {
-                    ProcessEx processEx = new ProcessEx(pid);
-                    if (comparer.Compare(procName, processEx.Name) == 0)
+                    if (predicate == null || predicate(processEx))
                     {
-                        if (predicate == null || predicate(processEx))
-                        {
-                            return processEx;
-                        }
+                        return processEx;
                     }
                 }
-                catch (Exception)
-                {
-                    // Process doesn't exist anymore or we don't have access, skip it
-                }
+            }
+            catch (Exception)
+            {
+                // Process doesn't exist anymore, or we don't have access, skip it
             }
         }
+        
         return null;
     }
-
+    
+    // https://github.com/apple-opensource/xnu/blob/24525736ba5b8a67ce3a8a017ced469abe101ad5/libsyscall/wrappers/libproc/libproc.c#L61-L72
     [DllImport("libproc.dylib")]
-    private static extern int process_listpids(int type, uint typeinfo, int[] buffer, int buffersize, ref int retbufsize);
+    private static extern int proc_listallpids(int[] buffer, int buffersize);
 }
 
 public abstract class ProcessExBase : IDisposable
