@@ -1,11 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Security.Principal;
-using NitroxModel.Platforms.OS.MacOS;
-using NitroxModel.Platforms.OS.Unix;
-using NitroxModel.Platforms.OS.Windows;
 
 namespace NitroxModel.Platforms.OS.Shared;
 
@@ -129,65 +124,5 @@ public class ProcessEx : IDisposable
         }
 
         return found;
-    }
-}
-
-public abstract class ProcessExBase : IDisposable
-{
-    public abstract int Id { get; }
-    public abstract string Name { get; }
-    public abstract IntPtr Handle { get; }
-    public abstract ProcessModuleEx MainModule { get; }
-    public abstract string MainModuleFileName { get; }
-    public abstract IntPtr MainWindowHandle { get; }
-    public abstract byte[] ReadMemory(IntPtr address, int size);
-    public abstract int WriteMemory(IntPtr address, byte[] data);
-    public abstract IEnumerable<ProcessModuleEx> GetModules();
-    public abstract void Suspend();
-    public abstract void Resume();
-    public abstract void Terminate();
-
-    public static bool IsElevated()
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return new WindowsPrincipal(WindowsIdentity.GetCurrent()).IsInRole(WindowsBuiltInRole.Administrator);
-        }
-        return geteuid() == 0;
-    }
-
-    public virtual void Dispose()
-    {
-    }
-
-    [DllImport("libc")]
-    private static extern uint geteuid();
-}
-
-public class ProcessModuleEx
-{
-    public IntPtr BaseAddress { get; set; }
-    public string ModuleName { get; set; }
-    public string FileName { get; set; }
-    public int ModuleMemorySize { get; set; }
-}
-
-public static class ProcessExFactory
-{
-    public static ProcessExBase Create(int pid)
-    {
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
-            return new WindowsProcessEx(pid);
-        }
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
-            return new LinuxProcessEx(pid);
-        }
-        if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            return new MacProcessEx(pid);
-        }
-        throw new PlatformNotSupportedException();
     }
 }

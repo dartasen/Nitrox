@@ -51,11 +51,18 @@ internal static class Program
 
     private static void CheckForRunningInstance()
     {
-        using ProcessEx process = ProcessEx.GetFirstProcess("Nitrox.Launcher", process => process.Id != Environment.ProcessId);
-        if (process != null)
+        try
         {
-            process.SetForegroundWindowAndRestore();
-            Environment.Exit(0);
+            using ProcessEx process = ProcessEx.GetFirstProcess("Nitrox.Launcher", process => process.Id != Environment.ProcessId);
+            if (process is not null)
+            {
+                process.SetForegroundWindowAndRestore();
+                Environment.Exit(0);
+            }
+        }
+        catch (Exception)
+        {
+            // Ignore
         }
     }
 

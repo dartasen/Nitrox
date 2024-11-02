@@ -9,11 +9,10 @@ using NitroxModel.Platforms.OS.Shared;
 
 namespace NitroxModel.Platforms.OS.Unix;
 
-public class LinuxProcessEx : ProcessExBase
+public sealed class LinuxProcessEx : ProcessExBase
 {
-    private readonly int pid;
+    public override int Id { get; }
 
-    public override int Id => pid;
     public override IntPtr Handle => IntPtr.Zero; // Linux doesn't use handles
 
     public override string Name
@@ -22,7 +21,7 @@ public class LinuxProcessEx : ProcessExBase
         {
             try
             {
-                string status = File.ReadAllText($"/proc/{pid}/status");
+                string status = File.ReadAllText($"/proc/{Id}/status");
                 string[] lines = status.Split('\n');
                 return lines.FirstOrDefault(l => l.StartsWith("Name:"))?.Substring(5).Trim();
             }
@@ -31,7 +30,7 @@ public class LinuxProcessEx : ProcessExBase
                 // If we can't read the status file, try to get the name from the command line
                 try
                 {
-                    string cmdline = File.ReadAllText($"/proc/{pid}/cmdline");
+                    string cmdline = File.ReadAllText($"/proc/{Id}/cmdline");
                     return Path.GetFileName(cmdline.Split('\0')[0]);
                 }
                 catch
@@ -64,7 +63,7 @@ public class LinuxProcessEx : ProcessExBase
         {
             try
             {
-                return ReadSymbolicLink($"/proc/{pid}/exe");
+                return ReadSymbolicLink($"/proc/{Id}/exe");
             }
             catch (UnauthorizedAccessException)
             {
@@ -90,8 +89,8 @@ public class LinuxProcessEx : ProcessExBase
 
     public LinuxProcessEx(int pid)
     {
-        this.pid = pid;
-        if (!File.Exists($"/proc/{this.pid}/status"))
+        Id = pid;
+        if (!File.Exists($"/proc/{Id}/status"))
         {
             throw new ArgumentException("Process does not exist.", nameof(pid));
         }
@@ -102,7 +101,7 @@ public class LinuxProcessEx : ProcessExBase
         byte[] buffer = new byte[size];
         try
         {
-            using FileStream fs = new FileStream($"/proc/{pid}/mem", FileMode.Open, FileAccess.Read);
+            using FileStream fs = new FileStream($"/proc/{Id}/mem", FileMode.Open, FileAccess.Read);
             fs.Seek((long)address, SeekOrigin.Begin);
             if (fs.Read(buffer, 0, size) != size)
             {
@@ -118,7 +117,7 @@ public class LinuxProcessEx : ProcessExBase
 
     public override int WriteMemory(IntPtr address, byte[] data)
     {
-        int result = ptrace(PtraceRequest.PTRACE_ATTACH, pid, IntPtr.Zero, IntPtr.Zero);
+        int result = ptrace(PtraceRequest.PTRACE_ATTACH, Id, IntPtr.Zero, IntPtr.Zero);
         if (result < 0)
         {
             throw new InvalidOperationException("Failed to attach to the process.");
@@ -129,7 +128,7 @@ public class LinuxProcessEx : ProcessExBase
             for (int i = 0; i < data.Length; i += sizeof(long))
             {
                 long value = BitConverter.ToInt64(data, i);
-                if (ptrace(PtraceRequest.PTRACE_POKEDATA, pid, address + i, (IntPtr)value) < 0)
+                if (ptrace(PtraceRequest.PTRACE_POKEDATA, Id, address + i, (IntPtr)value) < 0)
                 {
                     throw new InvalidOperationException("Failed to write memory.");
                 }
@@ -137,36 +136,38 @@ public class LinuxProcessEx : ProcessExBase
         }
         finally
         {
-            ptrace(PtraceRequest.PTRACE_DETACH, pid, IntPtr.Zero, IntPtr.Zero);
+            ptrace(PtraceRequest.PTRACE_DETACH, Id, IntPtr.Zero, IntPtr.Zero);
         }
         return data.Length;
     }
 
     public override IEnumerable<ProcessModuleEx> GetModules()
     {
-        List<ProcessModuleEx> modules = new();
-        string[] lines = File.ReadAllLines($"/proc/{pid}/maps");
+        List<ProcessModuleEx> modules = [];
+        string[] lines = File.ReadAllLines($"/proc/{Id}/maps");
         foreach (string line in lines)
         {
             string[] parts = line.Split(' ');
-            if (parts.Length >= 6)
+            if (parts.Length < 6)
             {
-                string[] addresses = parts[0].Split('-');
-                modules.Add(new ProcessModuleEx
-                {
-                    BaseAddress = (IntPtr)long.Parse(addresses[0], NumberStyles.HexNumber),
-                    ModuleName = parts[5],
-                    FileName = parts[5],
-                    ModuleMemorySize = (int)(long.Parse(addresses[1], NumberStyles.HexNumber) - long.Parse(addresses[0], NumberStyles.HexNumber))
-                });
+                continue;
             }
+            
+            string[] addresses = parts[0].Split('-');
+            modules.Add(new ProcessModuleEx
+            {
+                BaseAddress = (IntPtr)long.Parse(addresses[0], NumberStyles.HexNumber),
+                ModuleName = parts[5],
+                FileName = parts[5],
+                ModuleMemorySize = (int)(long.Parse(addresses[1], NumberStyles.HexNumber) - long.Parse(addresses[0], NumberStyles.HexNumber))
+            });
         }
         return modules;
     }
 
     public override void Suspend()
     {
-        if (kill(pid, 19) != 0) // SIGSTOP
+        if (kill(Id, 19) != 0) // SIGSTOP
         {
             throw new InvalidOperationException("Failed to suspend the process.");
         }
@@ -174,7 +175,7 @@ public class LinuxProcessEx : ProcessExBase
 
     public override void Resume()
     {
-        if (kill(pid, 18) != 0) // SIGCONT
+        if (kill(Id, 18) != 0) // SIGCONT
         {
             throw new InvalidOperationException("Failed to resume the process.");
         }
@@ -182,7 +183,7 @@ public class LinuxProcessEx : ProcessExBase
 
     public override void Terminate()
     {
-        if (kill(pid, 9) != 0) // SIGKILL
+        if (kill(Id, 9) != 0) // SIGKILL
         {
             throw new InvalidOperationException("Failed to terminate the process.");
         }
@@ -194,10 +195,10 @@ public class LinuxProcessEx : ProcessExBase
     [DllImport("libc", SetLastError = true)]
     private static extern int kill(int pid, int sig);
 
-    [DllImport("libc")]
+    [DllImport("libc", CharSet = CharSet.Unicode, SetLastError = true)]
     private static extern int readlink(string path, byte[] buf, int bufsiz);
 
-    private string ReadSymbolicLink(string path)
+    private static string ReadSymbolicLink(string path)
     {
         const int BUFFER_SIZE = 1024;
         byte[] buffer = new byte[BUFFER_SIZE];

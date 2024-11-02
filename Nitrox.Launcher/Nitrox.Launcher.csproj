@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
@@ -10,7 +10,29 @@
         <ApplicationIcon>Assets\Images\nitrox-icon.ico</ApplicationIcon>
         <PublishTrimmed>false</PublishTrimmed>
     </PropertyGroup>
-
+    
+    <!-- MacOS specific -->
+    <ItemGroup Condition="$(Configuration) == 'Release' AND ($(RuntimeIdentifier) == 'osx-x64' OR $(RuntimeIdentifier) == 'osx-arm64')">
+        <None Update="Platforms\MacOS\Info.plist">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>Contents\Info.plist</TargetPath>
+        </None>
+        <None Update="Platforms\MacOS\Entitlements.plist">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>Contents\Entitlements.plist</TargetPath>
+        </None>
+        <None Update="Platforms\MacOS\Nitrox.icns">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <TargetPath>Contents\Resources\Nitrox.icns</TargetPath>
+        </None>
+    </ItemGroup>
+    
+    <PropertyGroup Condition="$(Configuration) == 'Release' AND ($(RuntimeIdentifier) == 'osx-x64' OR $(RuntimeIdentifier) == 'osx-arm64')">
+        <!-- https://learn.microsoft.com/en-us/dotnet/core/install/macos-notarization-issues#native-apphost -->
+        <UseAppHost>true</UseAppHost>
+        <SelfContained>true</SelfContained>
+    </PropertyGroup>
+    
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
@@ -24,7 +46,6 @@
         <PackageReference Include="Avalonia.Desktop" Version="11.1.3" />
         <PackageReference Include="Avalonia.ReactiveUI" Version="11.1.3" />
         <PackageReference Include="Avalonia.Themes.Fluent" Version="11.1.3" />
-        <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="11.1.3" />
         <PackageReference Include="Avalonia.Xaml.Interactions" Version="11.1.0" />
         <PackageReference Include="Avalonia.Xaml.Interactivity" Version="11.1.0" />

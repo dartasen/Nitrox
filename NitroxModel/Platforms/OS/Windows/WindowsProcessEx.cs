@@ -8,7 +8,7 @@ using NitroxModel.Platforms.OS.Shared;
 
 namespace NitroxModel.Platforms.OS.Windows;
 
-public class WindowsProcessEx : ProcessExBase
+public sealed class WindowsProcessEx : ProcessExBase
 {
     private readonly Process process;
     private bool disposed;
