@@ -11,7 +11,6 @@ namespace NitroxModel.Platforms.OS.Shared;
 
 public class ProcessEx : IDisposable
 {
-    private const int PROC_ALL_PIDS = 1;
     private readonly ProcessExBase implementation;
 
     public int Id => implementation.Id;
@@ -187,7 +186,7 @@ public static class ProcessExFactory
         }
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            return new MacOSProcessEx(pid);
+            return new MacProcessEx(pid);
         }
         throw new PlatformNotSupportedException();
     }

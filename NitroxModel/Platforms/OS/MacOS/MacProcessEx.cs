@@ -5,7 +5,7 @@ using NitroxModel.Platforms.OS.Shared;
 
 namespace NitroxModel.Platforms.OS.MacOS;
 
-public class MacOSProcessEx : ProcessExBase
+public class MacProcessEx : ProcessExBase
 {
     private readonly IntPtr task;
     private bool disposed;
@@ -57,7 +57,7 @@ public class MacOSProcessEx : ProcessExBase
         }
     }
 
-    public MacOSProcessEx(int pid)
+    public MacProcessEx(int pid)
     {
         if (!IsElevated())
         {
