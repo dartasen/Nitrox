@@ -1,36 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+    <Import Project="..\Release.targets" />
+    
     <PropertyGroup>
+        <!-- OutputType for Windows, MacOS & Linux -->
         <OutputType>WinExe</OutputType>
         <TargetFramework>net8.0</TargetFramework>
-        <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+        <BuiltInComInteropSupport>false</BuiltInComInteropSupport>
         <AvaloniaNameGeneratorIsEnabled>true</AvaloniaNameGeneratorIsEnabled>
         <ApplicationManifest>app.manifest</ApplicationManifest>
         <SatelliteResourceLanguages>en-US</SatelliteResourceLanguages>
         <ApplicationIcon>Assets\Images\nitrox-icon.ico</ApplicationIcon>
         <PublishTrimmed>false</PublishTrimmed>
-    </PropertyGroup>
-    
-    <!-- MacOS specific -->
-    <ItemGroup Condition="$(Configuration) == 'Release' AND ($(RuntimeIdentifier) == 'osx-x64' OR $(RuntimeIdentifier) == 'osx-arm64')">
-        <None Update="Platforms\MacOS\Info.plist">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <TargetPath>Contents\Info.plist</TargetPath>
-        </None>
-        <None Update="Platforms\MacOS\Entitlements.plist">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <TargetPath>Contents\Entitlements.plist</TargetPath>
-        </None>
-        <None Update="Platforms\MacOS\Nitrox.icns">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <TargetPath>Contents\Resources\Nitrox.icns</TargetPath>
-        </None>
-    </ItemGroup>
-    
-    <PropertyGroup Condition="$(Configuration) == 'Release' AND ($(RuntimeIdentifier) == 'osx-x64' OR $(RuntimeIdentifier) == 'osx-arm64')">
-        <!-- https://learn.microsoft.com/en-us/dotnet/core/install/macos-notarization-issues#native-apphost -->
-        <UseAppHost>true</UseAppHost>
-        <SelfContained>true</SelfContained>
     </PropertyGroup>
     
     <ItemGroup>
@@ -63,7 +44,7 @@
     </ItemGroup>
 
     <!-- Generate lib folders for project dependencies -->
-    <Import Project="..\GenerateLibFolder.props" />
+    <Import Project="..\GenerateLibFolder.targets" />
 
     <Target Name="MoveNitroxAssetsToLauncherOutput" AfterTargets="$(_NitroxMoveDependenciesToLibTaskName)">
         <Message Importance="High" Text="Running MoveNitroxAssetsToLauncherOutput" />
@@ -89,8 +70,10 @@
         </PropertyGroup>
 
         <!-- Create directory if it doesn't exist -->
-        <MakeDir Directories="$(OutputDirectory)" Condition="!Exists('$(OutputDirectory)')" ContinueOnError="WarnAndContinue" />
-
+        <MakeDir Directories="$(OutputDirectory)"
+                 Condition="!Exists('$(OutputDirectory)')"
+                 ContinueOnError="WarnAndContinue" />
+        
          <!-- MSBuild project build target with OutputPath somehow doesn't work -->
         <Exec Command="dotnet msbuild ../NitroxPatcher/NitroxPatcher.csproj -t:Build -p:Configuration=$(Configuration) -p:TargetFramework=net472 -p:OutputPath=$(OutputDirectory)" />
     </Target>
