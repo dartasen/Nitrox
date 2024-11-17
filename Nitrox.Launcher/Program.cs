@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -18,6 +19,7 @@ internal static class Program
     // Things aren't initialized yet and stuff might break
     [STAThread]
     [MethodImpl(MethodImplOptions.NoInlining)]
+    [RequiresUnreferencedCode("Calls Nitrox.Launcher.Program.AssemblyResolver.Handler(Object, ResolveEventArgs)")]
     public static void Main(string[] args)
     {
         AppDomain.CurrentDomain.AssemblyResolve += AssemblyResolver.Handler;
@@ -76,6 +78,7 @@ internal static class Program
     {
         private static string currentExecutableDirectory;
 
+        [RequiresUnreferencedCode("Calls ResolveFromLib(ReadOnlySpan<Char>)")]
         public static Assembly Handler(object sender, ResolveEventArgs args)
         {
             static Assembly ResolveFromLib(ReadOnlySpan<char> dllName)

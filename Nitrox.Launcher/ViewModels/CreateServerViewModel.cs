@@ -36,6 +36,7 @@ public partial class CreateServerViewModel : ModalViewModelBase
     public CreateServerViewModel(IKeyValueStore keyValueStore)
     {
         this.keyValueStore = keyValueStore;
+        ValidateProperty(nameof(name));
     }
 
     public void CreateEmptySave(string saveName, NitroxGameMode saveGameMode)

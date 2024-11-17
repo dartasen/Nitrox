@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reactive.Disposables;
 using Avalonia;
@@ -19,12 +19,6 @@ public abstract partial class ModalViewModelBase : ObservableValidator, IModalDi
     [ObservableProperty] private ButtonOptions? selectedOption;
 
     bool? IModalDialogViewModel.DialogResult => (bool)this;
-
-    protected ModalViewModelBase()
-    {
-        // Always run validation first so HasErrors is set (i.e. trigger CanExecute logic).
-        ValidateAllProperties();
-    }
 
     public static implicit operator bool(ModalViewModelBase self) => self is { HasErrors: false } and not { SelectedOption: null or ButtonOptions.No };
 
