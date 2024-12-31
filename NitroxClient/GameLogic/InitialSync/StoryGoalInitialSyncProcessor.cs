@@ -19,77 +19,82 @@ public class StoryGoalInitialSyncProcessor : InitialSyncProcessor
 
         AddStep(SetTimeData);
         AddStep(SetupStoryGoalManager);
-        AddStep(SetupTrackers);
-        AddStep(SetupAuroraAndSunbeam);
         AddStep(SetScheduledGoals);
+        AddStep(SetupAuroraAndSunbeam);
         AddStep(RefreshStoryWithLatestData);
     }
 
     private static IEnumerator SetupStoryGoalManager(InitialPlayerSync packet)
     {
+        Dictionary<string, float> personalGoals = packet.StoryGoalData.PersonalCompletedGoalsWithTimestamp;
         List<string> completedGoals = packet.StoryGoalData.CompletedGoals;
         List<string> radioQueue = packet.StoryGoalData.RadioQueue;
-        Dictionary<string, float> personalGoals = packet.StoryGoalData.PersonalCompletedGoalsWithTimestamp;
+
+        // Deserialize data for StoryGoalManager
         StoryGoalManager storyGoalManager = StoryGoalManager.main;
-
+        storyGoalManager.version = 3;
         storyGoalManager.completedGoals.AddRange(completedGoals);
-
         storyGoalManager.pendingRadioMessages.AddRange(radioQueue);
+
+        // Initialize StoryGoalManager (Code copied from StoryGoalManager.OnSceneObjectsLoaded())
+        storyGoalManager.compoundGoalTracker.Initialize(storyGoalManager.completedGoals);
+        storyGoalManager.onGoalUnlockTracker.Initialize(storyGoalManager.completedGoals);
+        storyGoalManager.initialized = true;
+
+        // Start radio
         storyGoalManager.PulsePendingMessages();
 
-        // Restore states of GoalManager and the (tutorial) arrow system
-        foreach (KeyValuePair<string, float> entry in personalGoals)
-        {
-            Goal entryGoal = GoalManager.main.goals.Find(goal => goal.customGoalName.Equals(entry.Key));
-            if (entryGoal != null)
-            {
-                entryGoal.SetTimeCompleted(entry.Value);
-            }
-        }
-        GoalManager.main.completedGoalNames.AddRange(personalGoals.Keys);
-        PlayerWorldArrows.main.completedCustomGoals.AddRange(personalGoals.Keys);
+        // Initialize CompoundGoalTracker without already completed goals
+        CompoundGoalTracker compoundGoalTracker = storyGoalManager.compoundGoalTracker;
+        compoundGoalTracker.goals.RemoveAll(goal => completedGoals.Contains(goal.key));
 
-        // Deactivate the current arrow if it was completed
-        if (personalGoals.Any(goal => goal.Key.Equals(WorldArrowManager.main.currentGoalText)))
-        {
-            WorldArrowManager.main.DeactivateArrow();
-        }
+        // Initialize OnGoalUnlockTracker without already completed goals
+        OnGoalUnlockTracker onGoalUnlockTracker = storyGoalManager.onGoalUnlockTracker;
+        completedGoals.ForEach(goal => onGoalUnlockTracker.goalUnlocks.Remove(goal));
 
-        Log.Info($"""
-        Received initial sync packet with:
-        - Completed story goals : {completedGoals.Count}
-        - Personal goals        : {personalGoals.Count}
-        - Radio queue           : {radioQueue.Count}
-        """);
-        yield break;
-    }
+        // Initialize LocationGoalTracker without already completed goals
+        LocationGoalTracker locationTracker = storyGoalManager.locationGoalTracker;
+        locationTracker.CancelInvoke(nameof(LocationGoalTracker.TrackLocation)); // TrackLocation is being InvokeRepeating inside Start()
+        locationTracker.goals.RemoveAll(goal => completedGoals.Contains(goal.key));
+        locationTracker.InvokeRepeating(nameof(LocationGoalTracker.TrackLocation), 1f, locationTracker.trackLocationInterval);
 
-    private static IEnumerator SetupTrackers(InitialPlayerSync packet)
-    {
-        List<string> completedGoals = packet.StoryGoalData.CompletedGoals;
-        StoryGoalManager storyGoalManager = StoryGoalManager.main;
+        // Initialize BiomeGoalTracker without already completed goals
+        BiomeGoalTracker biomeGoalTracker = storyGoalManager.biomeGoalTracker;
+        biomeGoalTracker.goals.RemoveAll(goal => completedGoals.Contains(goal.key));
 
-        // Initialize CompoundGoalTracker and OnGoalUnlockTracker and clear their already completed goals
-        storyGoalManager.OnSceneObjectsLoaded();
-
-        storyGoalManager.compoundGoalTracker.goals.RemoveAll(goal => completedGoals.Contains(goal.key));
-        completedGoals.ForEach(goal => storyGoalManager.onGoalUnlockTracker.goalUnlocks.Remove(goal));
-
-        // Clean LocationGoalTracker, BiomeGoalTracker and ItemGoalTracker already completed goals
-        storyGoalManager.locationGoalTracker.goals.RemoveAll(goal => completedGoals.Contains(goal.key));
-        storyGoalManager.biomeGoalTracker.goals.RemoveAll(goal => completedGoals.Contains(goal.key));
-
-        List<TechType> techTypesToRemove = new();
+        // Initialize ItemGoalTracker without already completed goals
+        ItemGoalTracker itemGoalTracker = storyGoalManager.itemGoalTracker;
         foreach (KeyValuePair<TechType, List<ItemGoal>> entry in storyGoalManager.itemGoalTracker.goals)
         {
             // Goals are all triggered at the same time but we don't know if some entries share certain goals
             if (entry.Value.All(goal => completedGoals.Contains(goal.key)))
             {
-                techTypesToRemove.Add(entry.Key);
-                continue;
+                itemGoalTracker.goals.Remove(entry.Key);
             }
         }
-        techTypesToRemove.ForEach(techType => storyGoalManager.itemGoalTracker.goals.Remove(techType));
+
+        // Restore states of GoalManager and the (tutorial) arrow system
+        GoalManager goalManager = GoalManager.main;
+        GoalManager.main.completedGoalNames.AddRange(personalGoals.Keys);
+
+        goalManager.CancelInvoke(nameof(GoalManager.UpdateFindGoal));
+        foreach (KeyValuePair<string, float> entry in personalGoals)
+        {
+            Goal entryGoal = GoalManager.main.goals.Find(goal => goal.customGoalName == entry.Key);
+            entryGoal?.SetTimeCompleted(entry.Value);
+        }
+
+        // Deactivate the current arrow if it was completed
+        if (personalGoals.Any(goal => goal.Key == WorldArrowManager.main.currentGoalText))
+        {
+            WorldArrowManager.main.DeactivateArrow();
+        }
+
+        // Restore states of the arrow system (ArrowUpdate() will hide already completed arrows)
+        PlayerWorldArrows playerWorldArrows = PlayerWorldArrows.main;
+        playerWorldArrows.version = 1;
+        playerWorldArrows.completedCustomGoals.AddRange(personalGoals.Keys);
+
         yield break;
     }
 
