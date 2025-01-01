@@ -19,8 +19,9 @@ public class StoryGoalInitialSyncProcessor : InitialSyncProcessor
 
         AddStep(SetTimeData);
         AddStep(SetupStoryGoalManager);
-        AddStep(SetScheduledGoals);
+        AddStep(SetupTrackers);
         AddStep(SetupAuroraAndSunbeam);
+        AddStep(SetScheduledGoals);
         AddStep(RefreshStoryWithLatestData);
     }
 
@@ -30,6 +31,12 @@ public class StoryGoalInitialSyncProcessor : InitialSyncProcessor
         List<string> completedGoals = packet.StoryGoalData.CompletedGoals;
         List<string> radioQueue = packet.StoryGoalData.RadioQueue;
 
+        Log.Info("Setting up StoryGoalManager");
+        Log.Info($"Initialized: {StoryGoalManager.main.initialized}");
+        Log.Info($"Version: {StoryGoalManager.main.version}");
+        Log.Info($"CompletedGoals: {string.Join(", ", StoryGoalManager.main.completedGoals)}");
+        Log.Info($"PendingRadioMessages: {string.Join(", ", StoryGoalManager.main.pendingRadioMessages)}");
+
         // Deserialize data for StoryGoalManager
         StoryGoalManager storyGoalManager = StoryGoalManager.main;
         storyGoalManager.version = 3;
@@ -37,12 +44,40 @@ public class StoryGoalInitialSyncProcessor : InitialSyncProcessor
         storyGoalManager.pendingRadioMessages.AddRange(radioQueue);
 
         // Initialize StoryGoalManager (Code copied from StoryGoalManager.OnSceneObjectsLoaded())
+        storyGoalManager.initialized = true;
         storyGoalManager.compoundGoalTracker.Initialize(storyGoalManager.completedGoals);
         storyGoalManager.onGoalUnlockTracker.Initialize(storyGoalManager.completedGoals);
-        storyGoalManager.initialized = true;
 
-        // Start radio
-        storyGoalManager.PulsePendingMessages();
+        // Restore states of GoalManager and the (tutorial) arrow system
+        GoalManager goalManager = GoalManager.main;
+        GoalManager.main.completedGoalNames.AddRange(personalGoals.Keys);
+
+        goalManager.CancelInvoke(nameof(GoalManager.UpdateFindGoal));
+        foreach (KeyValuePair<string, float> entry in personalGoals)
+        {
+            Goal entryGoal = GoalManager.main.goals.Find(goal => goal.customGoalName == entry.Key);
+            entryGoal?.SetTimeCompleted(entry.Value);
+        }
+
+        // Deactivate the current arrow if it was completed
+        if (personalGoals.Any(goal => goal.Key == WorldArrowManager.main.currentGoalText))
+        {
+            WorldArrowManager.main.DeactivateArrow();
+        }
+
+        // Restore states of the arrow system (ArrowUpdate() will hide already completed arrows)
+        PlayerWorldArrows playerWorldArrows = PlayerWorldArrows.main;
+        playerWorldArrows.version = 1;
+        playerWorldArrows.completedCustomGoals.AddRange(personalGoals.Keys);
+
+        yield break;
+    }
+
+    private static IEnumerator SetupTrackers(InitialPlayerSync packet)
+    {
+        List<string> completedGoals = packet.StoryGoalData.CompletedGoals;
+
+        StoryGoalManager storyGoalManager = StoryGoalManager.main;
 
         // Initialize CompoundGoalTracker without already completed goals
         CompoundGoalTracker compoundGoalTracker = storyGoalManager.compoundGoalTracker;
@@ -72,28 +107,6 @@ public class StoryGoalInitialSyncProcessor : InitialSyncProcessor
                 itemGoalTracker.goals.Remove(entry.Key);
             }
         }
-
-        // Restore states of GoalManager and the (tutorial) arrow system
-        GoalManager goalManager = GoalManager.main;
-        GoalManager.main.completedGoalNames.AddRange(personalGoals.Keys);
-
-        goalManager.CancelInvoke(nameof(GoalManager.UpdateFindGoal));
-        foreach (KeyValuePair<string, float> entry in personalGoals)
-        {
-            Goal entryGoal = GoalManager.main.goals.Find(goal => goal.customGoalName == entry.Key);
-            entryGoal?.SetTimeCompleted(entry.Value);
-        }
-
-        // Deactivate the current arrow if it was completed
-        if (personalGoals.Any(goal => goal.Key == WorldArrowManager.main.currentGoalText))
-        {
-            WorldArrowManager.main.DeactivateArrow();
-        }
-
-        // Restore states of the arrow system (ArrowUpdate() will hide already completed arrows)
-        PlayerWorldArrows playerWorldArrows = PlayerWorldArrows.main;
-        playerWorldArrows.version = 1;
-        playerWorldArrows.completedCustomGoals.AddRange(personalGoals.Keys);
 
         yield break;
     }
@@ -162,6 +175,9 @@ public class StoryGoalInitialSyncProcessor : InitialSyncProcessor
         {
             PrecursorGunStoryEvents.main.Start();
         }
+
+        // Start radio
+        StoryGoalManager.main.PulsePendingMessages();
         yield break;
     }
 
