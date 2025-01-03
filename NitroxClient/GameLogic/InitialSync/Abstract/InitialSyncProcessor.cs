@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using NitroxModel.Packets;
@@ -15,7 +15,7 @@ public abstract class InitialSyncProcessor : IInitialSyncProcessor
         for (int i = 0; i < Steps.Count; i++)
         {
             yield return Steps[i](packet);
-            waitScreenItem.SetProgress((float)i / Steps.Count);
+            waitScreenItem.SetProgress(i, Steps.Count);
             yield return null;
         }
     }

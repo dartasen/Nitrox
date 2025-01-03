@@ -18,16 +18,16 @@ public class PdaInitialSyncProcessor : InitialSyncProcessor
     public PdaInitialSyncProcessor(IPacketSender packetSender)
     {
         this.packetSender = packetSender;
-    }
 
-    // The steps are ordered like their call order in Player.OnProtoDeserialize
-    public override List<Func<InitialPlayerSync, IEnumerator>> Steps { get; } = new()
-    {
-        RestoreKnownTech,
-        RestorePDALog,
-        RestoreEncyclopediaEntries,
-        RestorePDAScanner
-    };
+        AddDependency<PlayerInitialSyncProcessor>();
+        AddDependency<StoryGoalInitialSyncProcessor>();
+
+        // The steps are ordered like their call order in Player.OnProtoDeserialize
+        AddStep(RestoreKnownTech);
+        AddStep(RestorePDALog);
+        AddStep(RestoreEncyclopediaEntries);
+        AddStep(RestorePDAScanner);
+    }
 
     private static IEnumerator RestoreKnownTech(InitialPlayerSync packet)
     {
@@ -47,6 +47,7 @@ public class PdaInitialSyncProcessor : InitialSyncProcessor
         List<PDALogEntry> logEntries = packet.PDAData.PDALogEntries;
         Log.Info($"Received initial sync packet with {logEntries.Count} pda log entries");
 
+        using (PacketSuppressor<StoryGoalExecuted>.Suppress())
         using (PacketSuppressor<PDALogEntryAdd>.Suppress())
         {
             // We just need the timestamp and the key because everything else is provided by PDALog.InitDataForEntries

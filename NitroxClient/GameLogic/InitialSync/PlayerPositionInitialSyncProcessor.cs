@@ -14,14 +14,10 @@ namespace NitroxClient.GameLogic.InitialSync;
 
 public class PlayerPositionInitialSyncProcessor : InitialSyncProcessor
 {
-    private static readonly Vector3 spawnRelativeToEscapePod = new Vector3(0.9f, 2.1f, 0);
+    private static readonly Vector3 spawnRelativeToEscapePod = new(0.9f, 2.1f, 0);
 
-    private readonly IPacketSender packetSender;
-
-    public PlayerPositionInitialSyncProcessor(IPacketSender packetSender)
+    public PlayerPositionInitialSyncProcessor()
     {
-        this.packetSender = packetSender;
-
         AddDependency<PlayerInitialSyncProcessor>();
         AddDependency<GlobalRootInitialSyncProcessor>();
     }
