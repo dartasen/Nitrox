@@ -11,29 +11,37 @@ public partial class MainGameController_StartGame_Patch : NitroxPatch, IPersiste
 {
     public static readonly MethodInfo TARGET_METHOD = AccessTools.EnumeratorMoveNext(Reflect.Method((MainGameController t) => t.StartGame()));
 
-    public static readonly OpCode INJECTION_OPCODE = OpCodes.Call;
-    public static readonly object INJECTION_OPERAND = Reflect.Method(() => WaitScreen.Remove(default));
-
-    public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, IEnumerable<CodeInstruction> instructions)
+    public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
     {
-        Validate.NotNull(INJECTION_OPERAND);
-
-        int injectSeenCounter = 0;
-
-        foreach (CodeInstruction instruction in instructions)
-        {
-            yield return instruction;
-
-
-            if (instruction.opcode.Equals(INJECTION_OPCODE) && instruction.operand.Equals(INJECTION_OPERAND))
-            {
-                injectSeenCounter++;
-
-                if (injectSeenCounter == 3)
-                {
-                    yield return new CodeInstruction(OpCodes.Call, Reflect.Method(() => Multiplayer.SubnauticaLoadingCompleted()));
-                }
-            }
-        }
+        // waitItem.SetProgress(1f);
+        // Multiplayer.SubnauticaLoadingCompleted() [INSERTED LINE]
+        // WaitScreen.Remove(waitItem);
+        // if (playIntro)
+        // {
+        //   uGUI.main.intro.Play(new Action(this.OnIntroDone));
+        // }
+        // yield break;
+        return new CodeMatcher(instructions)
+               .MatchEndForward(
+                   new CodeMatch(OpCodes.Ldarg_0),
+                   new CodeMatch(OpCodes.Ldfld),
+                   new CodeMatch(OpCodes.Ldc_R4, 1f),
+                   new CodeMatch(OpCodes.Callvirt, Reflect.Method((WaitScreen.ManualWaitItem waitItem) => waitItem.SetProgress(default))),
+                   new CodeMatch(OpCodes.Ldarg_0),
+                   new CodeMatch(OpCodes.Ldfld),
+                   new CodeMatch(OpCodes.Call, Reflect.Method(() => WaitScreen.Remove(default))),
+                   new CodeMatch(OpCodes.Ldarg_0)
+               )
+               .MatchStartBackwards(
+                   new CodeMatch(OpCodes.Ldarg_0),
+                   new CodeMatch(OpCodes.Ldfld),
+                   new CodeMatch(OpCodes.Call, Reflect.Method(() => WaitScreen.Remove(default)))
+               )
+               .ThrowIfInvalid($"Unable to find pattern inside {nameof(MainGameController_StartGame_Patch)}")
+               // Insert before last Remove() to avoid FreezeTime to end before multiplayer is ready, see WaitScreen.Update()
+               .Insert(
+                   new CodeInstruction(OpCodes.Call, Reflect.Method(() => Multiplayer.SubnauticaLoadingCompleted()))
+               )
+               .InstructionEnumeration();
     }
 }
