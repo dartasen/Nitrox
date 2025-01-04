@@ -13,10 +13,9 @@ namespace NitroxClient.Communication.Packets.Processors
     {
         private readonly IPacketSender packetSender;
         private readonly HashSet<IInitialSyncProcessor> processors;
-        private readonly HashSet<Type> alreadyRan = new();
-        private InitialPlayerSync packet;
+        private readonly HashSet<Type> alreadyRan = [];
 
-        private WaitScreen.ManualWaitItem loadingMultiplayerWaitItem;
+        private WaitScreen.ManualWaitItem nitroxMainWaitItem;
         private WaitScreen.ManualWaitItem subWaitScreenItem;
 
         private int cumulativeProcessorsRan;
@@ -30,18 +29,19 @@ namespace NitroxClient.Communication.Packets.Processors
 
         public override void Process(InitialPlayerSync packet)
         {
-            this.packet = packet;
-            loadingMultiplayerWaitItem = WaitScreen.Add(Language.main.Get("Nitrox_SyncingWorld"));
-            cumulativeProcessorsRan = 0;
-            Multiplayer.Main.StartCoroutine(ProcessInitialSyncPacket(this, null));
+            Multiplayer.Main.StartCoroutine(ProcessInitialSyncPacket(packet));
         }
 
-        private IEnumerator ProcessInitialSyncPacket(object sender, EventArgs eventArgs)
+        private IEnumerator ProcessInitialSyncPacket(InitialPlayerSync packet)
         {
+            nitroxMainWaitItem = WaitScreen.Add("Nitrox_SyncingWorld");
+            nitroxMainWaitItem.SetProgress(0.1f);
+
+            cumulativeProcessorsRan = 0;
             bool moreProcessorsToRun;
             do
             {
-                yield return Multiplayer.Main.StartCoroutine(RunPendingProcessors());
+                yield return Multiplayer.Main.StartCoroutine(RunPendingProcessors(packet));
 
                 moreProcessorsToRun = alreadyRan.Count < processors.Count;
                 if (moreProcessorsToRun && processorsRanLastCycle == 0)
@@ -50,7 +50,9 @@ namespace NitroxClient.Communication.Packets.Processors
                 }
             } while (moreProcessorsToRun);
 
-            WaitScreen.Remove(loadingMultiplayerWaitItem);
+            nitroxMainWaitItem.SetProgress(1f);
+            WaitScreen.Remove(nitroxMainWaitItem);
+
             Multiplayer.Main.InitialSyncCompleted = true;
 
             // When the player finishes loading, we can take back his invincibility
@@ -60,7 +62,7 @@ namespace NitroxClient.Communication.Packets.Processors
             packetSender.Send(new PlayerSyncFinished());
         }
 
-        private IEnumerator RunPendingProcessors()
+        private IEnumerator RunPendingProcessors(InitialPlayerSync packet)
         {
             processorsRanLastCycle = 0;
 
@@ -68,15 +70,19 @@ namespace NitroxClient.Communication.Packets.Processors
             {
                 if (IsWaitingToRun(processor.GetType()) && HasDependenciesSatisfied(processor))
                 {
-                    loadingMultiplayerWaitItem.SetProgress(cumulativeProcessorsRan, processors.Count);
+                    nitroxMainWaitItem.SetProgress(cumulativeProcessorsRan, processors.Count);
 
                     alreadyRan.Add(processor.GetType());
                     processorsRanLastCycle++;
                     cumulativeProcessorsRan++;
 
                     Log.Info($"Running {processor.GetType()}");
-                    subWaitScreenItem = WaitScreen.Add($"Running {processor.GetType().Name}");
+                    subWaitScreenItem = WaitScreen.Add(processor.GetType().Name);
+                    subWaitScreenItem.SetProgress(0f);
+
                     yield return Multiplayer.Main.StartCoroutine(processor.Process(packet, subWaitScreenItem));
+
+                    subWaitScreenItem.SetProgress(1f);
                     WaitScreen.Remove(subWaitScreenItem);
                 }
             }

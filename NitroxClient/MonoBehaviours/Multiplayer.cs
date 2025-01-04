@@ -104,20 +104,15 @@ namespace NitroxClient.MonoBehaviours
 
         public static IEnumerator LoadAsync()
         {
-            WaitScreen.ManualWaitItem worldSettleItem = WaitScreen.Add(Language.main.Get("Nitrox_WorldSettling"));
+            WaitScreen.ManualWaitItem item = WaitScreen.Add("Nitrox_JoiningSession");
+            item.SetProgress(0f);
 
-            yield return new WaitUntil(() => LargeWorldStreamer.main != null &&
-                                             LargeWorldStreamer.main.land != null &&
-                                             LargeWorldStreamer.main.IsReady() &&
-                                             LargeWorldStreamer.main.IsWorldSettled());
-
-            WaitScreen.Remove(worldSettleItem);
-
-            WaitScreen.ManualWaitItem item = WaitScreen.Add(Language.main.Get("Nitrox_JoiningSession"));
             yield return Main.StartCoroutine(Main.StartSession());
-            WaitScreen.Remove(item);
 
             yield return new WaitUntil(() => Main.InitialSyncCompleted);
+
+            item.SetProgress(1f);
+            WaitScreen.Remove(item);
 
             SetLoadingComplete();
             OnLoadingComplete?.Invoke();

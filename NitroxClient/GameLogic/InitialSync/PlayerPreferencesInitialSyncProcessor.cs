@@ -11,7 +11,7 @@ using NitroxModel.Packets;
 
 namespace NitroxClient.GameLogic.InitialSync;
 
-public class PlayerPreferencesInitialSyncProcessor : InitialSyncProcessor
+public sealed class PlayerPreferencesInitialSyncProcessor : InitialSyncProcessor
 {
     public PlayerPreferencesInitialSyncProcessor()
     {
@@ -21,24 +21,20 @@ public class PlayerPreferencesInitialSyncProcessor : InitialSyncProcessor
         AddDependency<StoryGoalInitialSyncProcessor>();
         AddDependency<PdaInitialSyncProcessor>();
         AddDependency<RemotePlayerInitialSyncProcessor>();
+
+        AddStep(UpdatePins);
+        AddStep(UpdatePingInstancePreferences);
     }
 
-    public override List<Func<InitialPlayerSync, IEnumerator>> Steps { get; } = new()
-    {
-        UpdatePins,
-        UpdatePingInstancePreferences
-    };
-
-    private static IEnumerator UpdatePins(InitialPlayerSync packet)
+    private static void UpdatePins(InitialPlayerSync packet)
     {
         using (PacketSuppressor<RecipePinned>.Suppress())
         {
             PinManager.main.Deserialize(packet.Preferences.PinnedTechTypes.Select(techType => (TechType)techType).ToList());
         }
-        yield break;
     }
 
-    private static IEnumerator UpdatePingInstancePreferences(InitialPlayerSync packet)
+    private static void UpdatePingInstancePreferences(InitialPlayerSync packet)
     {
         Dictionary<string, PingInstancePreference> pingPreferences = packet.Preferences.PingPreferences;
         void UpdateInstance(PingInstance instance)
@@ -49,7 +45,6 @@ public class PlayerPreferencesInitialSyncProcessor : InitialSyncProcessor
 
         PingManager.onAdd += UpdateInstance;
         UnityEngine.Object.FindObjectsOfType<PingInstance>().ForEach(UpdateInstance);
-        yield break;
     }
 
     /// <summary>

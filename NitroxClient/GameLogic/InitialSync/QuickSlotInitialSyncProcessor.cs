@@ -7,7 +7,7 @@ using NitroxModel.Packets;
 
 namespace NitroxClient.GameLogic.InitialSync;
 
-public class QuickSlotInitialSyncProcessor : InitialSyncProcessor
+public sealed class QuickSlotInitialSyncProcessor : InitialSyncProcessor
 {
     public QuickSlotInitialSyncProcessor()
     {
@@ -45,9 +45,9 @@ public class QuickSlotInitialSyncProcessor : InitialSyncProcessor
         Log.Info($"Received initial sync with {nonEmptySlots} quick slots populated with items");
     }
 
-    private Dictionary<NitroxId, InventoryItem> GetItemsById()
+    private static Dictionary<NitroxId, InventoryItem> GetItemsById()
     {
-        Dictionary<NitroxId, InventoryItem> itemsById = new();
+        Dictionary<NitroxId, InventoryItem> itemsById = [];
 
         foreach (InventoryItem inventoryItem in Inventory.main.container)
         {

@@ -12,16 +12,12 @@ using Math = System.Math;
 
 namespace NitroxClient.GameLogic.InitialSync;
 
-public class PlayerPositionInitialSyncProcessor : InitialSyncProcessor
+public sealed class PlayerPositionInitialSyncProcessor : InitialSyncProcessor
 {
-    private static readonly Vector3 spawnRelativeToEscapePod = new Vector3(0.9f, 2.1f, 0);
+    private static readonly Vector3 spawnRelativeToEscapePod = new(0.9f, 2.1f, 0);
 
-    private readonly IPacketSender packetSender;
-
-    public PlayerPositionInitialSyncProcessor(IPacketSender packetSender)
+    public PlayerPositionInitialSyncProcessor()
     {
-        this.packetSender = packetSender;
-
         AddDependency<PlayerInitialSyncProcessor>();
         AddDependency<GlobalRootInitialSyncProcessor>();
     }
@@ -47,13 +43,18 @@ public class PlayerPositionInitialSyncProcessor : InitialSyncProcessor
             Player.main.ValidateEscapePod();
         }
 
+        waitScreenItem.SetProgress(0.2f);
+
         // Player position is relative to a subroot if in a subroot
         Optional<NitroxId> subRootId = packet.PlayerSubRootId;
         if (!subRootId.HasValue)
         {
+            
             yield return Terrain.WaitForWorldLoad();
             yield break;
         }
+
+        waitScreenItem.SetProgress(0.4f);
 
         Optional<GameObject> sub = NitroxEntity.GetObjectFrom(subRootId.Value);
         if (!sub.HasValue)
@@ -63,6 +64,8 @@ public class PlayerPositionInitialSyncProcessor : InitialSyncProcessor
             yield break;
         }
 
+        waitScreenItem.SetProgress(0.6f);
+
         if (!sub.Value.TryGetComponent(out SubRoot subRoot))
         {
             Log.Debug("SubRootId-GameObject has no SubRoot component, so it's assumed to be the EscapePod");
@@ -70,13 +73,15 @@ public class PlayerPositionInitialSyncProcessor : InitialSyncProcessor
             yield break;
         }
 
+        waitScreenItem.SetProgress(0.8f);
+
         Player.main.SetCurrentSub(subRoot, true);
         // If the player's in a base/cyclops we don't need to wait for the world to load
         Player.main.UpdateIsUnderwater();
         Player.main.cinematicModeActive = false;
     }
 
-    private void AttachPlayerToEscapePod(NitroxId escapePodId)
+    private static void AttachPlayerToEscapePod(NitroxId escapePodId)
     {
         GameObject escapePod = NitroxEntity.RequireObjectFrom(escapePodId);
 

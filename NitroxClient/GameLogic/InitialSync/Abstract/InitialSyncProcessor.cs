@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using NitroxModel.Packets;
@@ -7,15 +7,15 @@ namespace NitroxClient.GameLogic.InitialSync.Abstract;
 
 public abstract class InitialSyncProcessor : IInitialSyncProcessor
 {
-    public virtual List<Func<InitialPlayerSync, IEnumerator>> Steps { get; } = new();
-    public virtual HashSet<Type> DependentProcessors { get; } = new();
+    public virtual List<Func<InitialPlayerSync, IEnumerator>> Steps { get; } = [];
+    public HashSet<Type> DependentProcessors { get; } = [];
 
     public virtual IEnumerator Process(InitialPlayerSync packet, WaitScreen.ManualWaitItem waitScreenItem)
     {
         for (int i = 0; i < Steps.Count; i++)
         {
             yield return Steps[i](packet);
-            waitScreenItem.SetProgress((float)i / Steps.Count);
+            waitScreenItem.SetProgress(i, Steps.Count);
             yield return null;
         }
     }
