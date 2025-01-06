@@ -104,6 +104,11 @@ namespace NitroxClient.MonoBehaviours
 
         public static IEnumerator LoadAsync()
         {
+            LoadingStage.common.Add("Nitrox_JoiningSession");
+            LoadingStage.common.Add("Nitrox_SyncingWorld");
+            LoadingStage.durations.Add("Nitrox_JoiningSession", 0f);
+            LoadingStage.durations.Add("Nitrox_SyncingWorld", 0f);
+
             WaitScreen.ManualWaitItem item = WaitScreen.Add("Nitrox_JoiningSession");
             item.SetProgress(0f);
 
@@ -165,7 +170,6 @@ namespace NitroxClient.MonoBehaviours
 
         public void InitMonoBehaviours()
         {
-            // Gameplay.
             gameObject.AddComponent<AnimationSender>();
             gameObject.AddComponent<PlayerMovementBroadcaster>();
             gameObject.AddComponent<PlayerDeathBroadcaster>();
@@ -184,14 +188,18 @@ namespace NitroxClient.MonoBehaviours
 
         private static void SetLoadingComplete()
         {
-            WaitScreen.main.isWaiting = false;
-            WaitScreen.main.stageProgress.Clear();
-            FreezeTime.End(FreezeTime.Id.WaitScreen);
-            WaitScreen.main.items.Clear();
+            LoadingScreenVersionText.DisableWarningText();
+
+            // If it still waiting for whatever reasons (Initial Sync crash ?)
+            if (WaitScreen.IsWaiting)
+            {
+                WaitScreen.main.isWaiting = false;
+                WaitScreen.main.stageProgress.Clear();
+                WaitScreen.main.items.Clear();
+                FreezeTime.End(FreezeTime.Id.WaitScreen);
+            }
 
             PlayerManager remotePlayerManager = NitroxServiceLocator.LocateService<PlayerManager>();
-
-            LoadingScreenVersionText.DisableWarningText();
             DiscordClient.InitializeRPInGame(Main.multiplayerSession.AuthenticationContext.Username, remotePlayerManager.GetTotalPlayerCount(), Main.multiplayerSession.SessionPolicy.MaxConnections);
             CoroutineHost.StartCoroutine(NitroxServiceLocator.LocateService<PlayerChatManager>().LoadChatKeyHint());
         }

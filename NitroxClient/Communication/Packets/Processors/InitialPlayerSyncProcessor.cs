@@ -35,7 +35,7 @@ namespace NitroxClient.Communication.Packets.Processors
         private IEnumerator ProcessInitialSyncPacket(InitialPlayerSync packet)
         {
             nitroxMainWaitItem = WaitScreen.Add("Nitrox_SyncingWorld");
-            nitroxMainWaitItem.SetProgress(0.1f);
+            nitroxMainWaitItem.SetProgress(0f);
 
             cumulativeProcessorsRan = 0;
             bool moreProcessorsToRun;
@@ -77,13 +77,9 @@ namespace NitroxClient.Communication.Packets.Processors
                     cumulativeProcessorsRan++;
 
                     Log.Info($"Running {processor.GetType()}");
-                    subWaitScreenItem = WaitScreen.Add(processor.GetType().Name);
-                    subWaitScreenItem.SetProgress(0f);
+                    subWaitScreenItem = new WaitScreen.ManualWaitItem(processor.GetType().Name);
 
                     yield return Multiplayer.Main.StartCoroutine(processor.Process(packet, subWaitScreenItem));
-
-                    subWaitScreenItem.SetProgress(1f);
-                    WaitScreen.Remove(subWaitScreenItem);
                 }
             }
         }
