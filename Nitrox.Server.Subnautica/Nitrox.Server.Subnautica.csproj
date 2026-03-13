@@ -14,6 +14,7 @@
         <PackageReference Include="MagicOnion.Client" />
         <PackageReference Include="Microsoft.Extensions.Hosting" />
         <PackageReference Include="SixLabors.ImageSharp" />
+        <PackageReference Include="Steamworks.NET" />
         <PackageReference Include="ZLogger" />
         <PackageReference Include="ServiceScan.SourceGenerator">
             <PrivateAssets>all</PrivateAssets>
