@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -26,15 +27,26 @@ internal class WriteGrpcPortFileService(IServer server) : IHostedLifecycleServic
 
     public async Task StartedAsync(CancellationToken cancellationToken)
     {
-        IServerAddressesFeature? addressFeature = server.Features.Get<IServerAddressesFeature>();
-        // We expect only one port to be known by .NET server (kestrel). If there are more, we need to refactor this code to ONLY write the gRPC port.
-        int grpcPort = addressFeature.Addresses.Select(a => new Uri(a).Port).First(); // Should throw if more than one port.
+        string endpointDescriptor;
+        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+        {
+            string pipeName = LauncherConstants.GetGrpcNamedPipeName(Environment.ProcessId);
+            endpointDescriptor = $"{LauncherConstants.GRPC_NAMED_PIPE_ENDPOINT_PREFIX}{pipeName}";
+        }
+        else
+        {
+            IServerAddressesFeature? addressFeature = server.Features.Get<IServerAddressesFeature>();
+            // We expect only one port to be known by .NET server (kestrel). If there are more, we need to refactor this code to ONLY write the gRPC port.
+            int grpcPort = addressFeature.Addresses.Select(a => new Uri(a).Port).First(); // Should throw if more than one port.
+            endpointDescriptor = grpcPort.ToString();
+        }
+
         int attempts = 10;
         while (attempts-- > 0)
         {
             try
             {
-                await File.WriteAllTextAsync(filePath, grpcPort.ToString(), cancellationToken);
+                await File.WriteAllTextAsync(filePath, endpointDescriptor, cancellationToken);
                 break;
             }
             catch (Exception)

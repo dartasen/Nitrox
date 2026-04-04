@@ -1,5 +1,7 @@
 using System.Buffers;
 using System.IO;
+using System.IO.Pipes;
+using System.Net.Http;
 using System.Threading.Channels;
 using Grpc.Core;
 using Grpc.Net.Client;
@@ -25,6 +27,7 @@ internal sealed class ServersManagementService(PlayerManager playerManager, IPac
     private readonly IOptions<ServerStartOptions> options = options;
     private readonly PlayerManager playerManager = playerManager;
     private GrpcChannel? channel;
+    private string? channelIdentity;
     private Task? pushLogsTask;
 
     public override void Dispose() => channel?.Dispose();
@@ -39,13 +42,13 @@ internal sealed class ServersManagementService(PlayerManager playerManager, IPac
         {
             try
             {
-                int? launcherGrpcPortAsync = await GetLauncherGrpcPortAsync();
-                if (launcherGrpcPortAsync == null)
+                LauncherGrpcEndpoint? endpoint = await GetLauncherGrpcEndpointAsync();
+                if (endpoint == null)
                 {
                     await WaitNextAsync();
                     continue;
                 }
-                await RefreshConnectionAsync(launcherGrpcPortAsync);
+                await RefreshConnectionAsync(endpoint.Value);
 
                 // Push data
                 await PushPollDataAsync(api);
@@ -66,12 +69,13 @@ internal sealed class ServersManagementService(PlayerManager playerManager, IPac
 
         ValueTask<bool> WaitNextAsync() => refreshTimer.WaitForNextTickAsync(stoppingToken);
 
-        async Task RefreshConnectionAsync(int? grpcPort)
+        async Task RefreshConnectionAsync(LauncherGrpcEndpoint endpoint)
         {
-            if (channel?.Target.EndsWith(grpcPort.ToString(), StringComparison.Ordinal) == false)
+            if (channelIdentity != endpoint.Identity)
             {
                 channel?.Dispose();
                 channel = null;
+                channelIdentity = null;
                 if (api != null)
                 {
                     await api.DisposeAsync();
@@ -79,7 +83,8 @@ internal sealed class ServersManagementService(PlayerManager playerManager, IPac
                 api = null;
             }
 
-            channel ??= GrpcChannel.ForAddress($"http://127.0.0.1:{grpcPort}");
+            channel ??= CreateChannel(endpoint);
+            channelIdentity ??= endpoint.Identity;
             if (api == null)
             {
                 StreamingHubClientOptions grpcOptions = StreamingHubClientOptions.CreateWithDefault()
@@ -110,6 +115,26 @@ internal sealed class ServersManagementService(PlayerManager playerManager, IPac
                     }
                 }
             }, cancellationToken);
+
+        static GrpcChannel CreateChannel(LauncherGrpcEndpoint endpoint)
+        {
+            if (endpoint.PipeName is not null)
+            {
+                SocketsHttpHandler handler = new()
+                {
+                    ConnectCallback = async (_, cancellationToken) =>
+                    {
+                        NamedPipeClientStream pipeStream = new(".", endpoint.PipeName, PipeDirection.InOut, PipeOptions.Asynchronous);
+                        await pipeStream.ConnectAsync(cancellationToken);
+                        return pipeStream;
+                    }
+                };
+
+                return GrpcChannel.ForAddress("http://localhost", new GrpcChannelOptions { HttpHandler = handler });
+            }
+
+            return GrpcChannel.ForAddress($"http://127.0.0.1:{endpoint.Port}");
+        }
     }
 
     private async Task PushPollDataAsync(IServersManagement api)
@@ -158,21 +183,43 @@ internal sealed class ServersManagementService(PlayerManager playerManager, IPac
         };
     }
 
-    private async Task<int?> GetLauncherGrpcPortAsync()
+    private async Task<LauncherGrpcEndpoint?> GetLauncherGrpcEndpointAsync()
     {
         try
         {
-            string port = await File.ReadAllTextAsync(Path.Combine(Path.GetTempPath(), LauncherConstants.GRPC_LISTEN_PORT_TEMP_FILE_NAME));
-            if (int.TryParse(port.Trim(), out int result))
+            string endpointDescriptor = await File.ReadAllTextAsync(Path.Combine(Path.GetTempPath(), LauncherConstants.GRPC_LISTEN_PORT_TEMP_FILE_NAME));
+            endpointDescriptor = endpointDescriptor.Trim();
+
+            if (endpointDescriptor.StartsWith(LauncherConstants.GRPC_NAMED_PIPE_ENDPOINT_PREFIX, StringComparison.Ordinal))
             {
-                return result;
+                string pipeName = endpointDescriptor.Substring(LauncherConstants.GRPC_NAMED_PIPE_ENDPOINT_PREFIX.Length);
+                if (!string.IsNullOrWhiteSpace(pipeName))
+                {
+                    return LauncherGrpcEndpoint.NamedPipe(pipeName);
+                }
             }
+
+            if (int.TryParse(endpointDescriptor, out int port))
+            {
+                return LauncherGrpcEndpoint.TcpPort(port);
+            }
+
+            logger.ZLogWarningOnce($"Unable to parse launcher gRPC endpoint metadata. Retrying...");
         }
         catch (Exception)
         {
             logger.ZLogWarningOnce($"Unable to get gRPC listen port from Nitrox Launcher, it might not be running. Retrying...");
         }
         return null;
+    }
+
+    private readonly record struct LauncherGrpcEndpoint(int? Port, string? PipeName)
+    {
+        public string Identity => PipeName is null ? $"tcp:{Port}" : $"pipe:{PipeName}";
+
+        public static LauncherGrpcEndpoint TcpPort(int port) => new(port, null);
+
+        public static LauncherGrpcEndpoint NamedPipe(string pipeName) => new(null, pipeName);
     }
 
     private class ServerManagementReceiver(CommandService commandProcessor, IPacketSender packetSender) : IServerManagementReceiver
