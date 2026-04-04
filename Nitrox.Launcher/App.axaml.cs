@@ -112,7 +112,7 @@ internal class App : Application
                        .ClearProviders()
                        .Services
                        .AddAppServices();
-            hostBuilder.WebHost.ConfigureKestrel(options => options.Listen(IPAddress.Any, 0, o => o.Protocols = HttpProtocols.Http2));
+            hostBuilder.WebHost.ConfigureKestrel(options => options.Listen(IPAddress.Loopback, 0, o => o.Protocols = HttpProtocols.Http2));
             WebApplication host = hostBuilder.Build();
             host.MapMagicOnionService();
             host.MapGrpcService<ServersManagement>();

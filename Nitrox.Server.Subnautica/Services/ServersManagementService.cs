@@ -79,7 +79,7 @@ internal sealed class ServersManagementService(PlayerManager playerManager, IPac
                 api = null;
             }
 
-            channel ??= GrpcChannel.ForAddress($"http://localhost:{grpcPort}");
+            channel ??= GrpcChannel.ForAddress($"http://127.0.0.1:{grpcPort}");
             if (api == null)
             {
                 StreamingHubClientOptions grpcOptions = StreamingHubClientOptions.CreateWithDefault()
