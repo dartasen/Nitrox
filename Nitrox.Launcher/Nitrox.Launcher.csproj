@@ -81,19 +81,23 @@
 
     <!-- ProjectReference with Properties/AdditionalProperties aren't given to referenced project inside Visual Studio, so we need to copy it by hand.. -->
     <!-- See: https://github.com/dotnet/msbuild/issues/5599 -->
-    <Target Name="_NitroxFixBuildInsideVisualStudio" AfterTargets="$(_NitroxMoveDependenciesToLibTaskName)" Condition="'$(BuildingInsideVisualStudio)' == 'true'">
+    <ItemGroup>
+        <_NitroxPatcher472Files Include="$(MSBuildProjectDirectory)\..\NitroxPatcher\bin\$(Configuration)\net472\*" />
+    </ItemGroup>
+
+        <Target Name="_NitroxFixBuildInsideVisualStudio"
+            AfterTargets="$(_NitroxMoveDependenciesToLibTaskName)"
+            Condition="'$(BuildingInsideVisualStudio)' == 'true'"
+            Inputs="@(_NitroxPatcher472Files)"
+            Outputs="@(_NitroxPatcher472Files->'$(MSBuildProjectDirectory)\$(OutputPath)\lib\net472\%(Filename)%(Extension)')">
 
         <Message Importance="High"
                  Text="Running _FixBuildInsideVisualStudio on $(MSBuildProjectName)" />
 
-        <ItemGroup>
-            <_FilesToCopy Include="$(MSBuildProjectDirectory)\..\NitroxPatcher\bin\$(Configuration)\net472\*" />
-        </ItemGroup>
-
         <Error Text="Unable to find NitroxPatcher files from _NitroxFixBuildInsideVisualStudio"
-               Condition="@(_FilesToCopy->Count()) == 0" />
+               Condition="@(_NitroxPatcher472Files->Count()) == 0" />
 
-        <Copy SourceFiles="@(_FilesToCopy)"
+        <Copy SourceFiles="@(_NitroxPatcher472Files)"
               DestinationFolder="$(MSBuildProjectDirectory)\$(OutputPath)\lib\net472\"
               OverwriteReadOnlyFiles="True"
               Retries="3"
@@ -104,15 +108,19 @@
 
     <!-- These dependencies are forced as DLL files, instead of implicit dependency (as Microsoft.AspNetCore.App.Ref). -->
     <!-- TODO: Fix why ONLY (and not on all build environments that) the MS DLL dependencies for "child project" aren't transitively copied over to launcher project. -->
-    <Target Name="_NitroxFixMissingMicrosoftExtensionsDlls" AfterTargets="$(_NitroxMoveDependenciesToLibTaskName)">
-        <ItemGroup>
-            <_FilesToCopy Include="$(MSBuildProjectDirectory)\..\Nitrox.Server.Subnautica\bin\$(Configuration)\$(TargetFramework)\Microsoft.Extensions.*.dll" />
-        </ItemGroup>
+    <ItemGroup>
+        <_NitroxServerMicrosoftExtensionsDlls Include="$(MSBuildProjectDirectory)\..\Nitrox.Server.Subnautica\bin\$(Configuration)\$(TargetFramework)\Microsoft.Extensions.*.dll" />
+    </ItemGroup>
+
+    <Target Name="_NitroxFixMissingMicrosoftExtensionsDlls"
+            AfterTargets="$(_NitroxMoveDependenciesToLibTaskName)"
+            Inputs="@(_NitroxServerMicrosoftExtensionsDlls)"
+            Outputs="@(_NitroxServerMicrosoftExtensionsDlls->'$(MSBuildProjectDirectory)\$(OutputPath)\lib\%(Filename)%(Extension)')">
 
         <Warning Text="Unable to find Microsoft.Extensions.* dll files from Nitrox.Server.Subnautica"
-               Condition="@(_FilesToCopy->Count()) == 0" />
+               Condition="@(_NitroxServerMicrosoftExtensionsDlls->Count()) == 0" />
 
-        <Copy SourceFiles="@(_FilesToCopy)"
+        <Copy SourceFiles="@(_NitroxServerMicrosoftExtensionsDlls)"
               DestinationFolder="$(MSBuildProjectDirectory)\$(OutputPath)\lib\"
               OverwriteReadOnlyFiles="True"
               Retries="3"

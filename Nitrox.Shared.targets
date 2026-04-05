@@ -120,7 +120,11 @@
 
     <Target Name="_NitroxMacOSRelease" Condition="$(_IsMacOSTarget) And $(CreateAppBundle)" AfterTargets="$(_NitroxReleaseTaskName)" />
     
-    <Target Name="_NitroxMacOSGenerateInfoPlist" BeforeTargets="BeforeBuild;BeforeRebuild" Condition="$(_IsMacOSTarget) And $(CreateAppBundle)">
+        <Target Name="_NitroxMacOSGenerateInfoPlist"
+            BeforeTargets="BeforeBuild;BeforeRebuild"
+            Condition="$(_IsMacOSTarget) And $(CreateAppBundle)"
+            Inputs="$(MSBuildProjectFullPath);$(MSBuildAllProjects)"
+            Outputs="$(PlatformAssetsPath)\Info.plist">
         <PropertyGroup>
             <InfoPlistContent>
 <![CDATA[
@@ -158,7 +162,7 @@
             </InfoPlistContent>
         </PropertyGroup>
 
-        <WriteLinesToFile File="$(PlatformAssetsPath)\Info.plist" Lines="$(InfoPlistContent)" Overwrite="true" />
+        <WriteLinesToFile File="$(PlatformAssetsPath)\Info.plist" Lines="$(InfoPlistContent)" Overwrite="true" WriteOnlyWhenDifferent="True" />
     </Target>
 
     <Target Name="_VerifyMacOSFiles" Condition="$(_IsMacOSTarget) And $(CreateAppBundle)" AfterTargets="$(_ReleaseMacOSTaskName)" DependsOnTargets="$(_NitroxMoveDependenciesToLibTaskName)">

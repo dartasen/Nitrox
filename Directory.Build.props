@@ -15,7 +15,8 @@
         <PathMap>$(MSBuildProjectDirectory)=$(MSBuildProjectName)</PathMap>
         <EnableNETAnalyzers>true</EnableNETAnalyzers>
         <AccelerateBuildsInVisualStudio>false</AccelerateBuildsInVisualStudio>
-        <DisableFastUpToDateCheck>true</DisableFastUpToDateCheck>
+        <!-- Keep Visual Studio fast up-to-date checks enabled unless explicitly overridden. -->
+        <DisableFastUpToDateCheck Condition="'$(DisableFastUpToDateCheck)' == ''">false</DisableFastUpToDateCheck>
         <!-- Disable CET because not everyone running Nitrox uses an up-to-date Windows. See for more info: https://github.com/SubnauticaNitrox/Nitrox/issues/2637 -->
         <CETCompat Condition="'$(_IsWindowsTarget)' == 'true'">false</CETCompat>
     </PropertyGroup>
