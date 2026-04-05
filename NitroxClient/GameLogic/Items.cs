@@ -128,14 +128,14 @@ public class Items
             if (parentConnection == null || !parentConnection.GetGameObject() ||
                 !parentConnection.GetGameObject().TryGetNitroxId(out NitroxId parentPipeId))
             {
-                Log.Error($"Couldn't find a valid reference to the OxygenPipe's parent pipe");
+                Log.Error("Couldn't find a valid reference to the OxygenPipe's parent pipe");
                 return;
             }
             IPipeConnection rootConnection = parentConnection.GetRoot();
             if (rootConnection == null || !rootConnection.GetGameObject() ||
                 !rootConnection.GetGameObject().TryGetNitroxId(out NitroxId rootPipeId))
             {
-                Log.Error($"Couldn't find a valid reference to the OxygenPipe's root pipe");
+                Log.Error("Couldn't find a valid reference to the OxygenPipe's root pipe");
                 return;
             }
 
