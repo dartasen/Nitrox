@@ -64,6 +64,18 @@ public static class GameInstallationFinder
     }
 
     /// <summary>
+    ///     Searches the system for all valid installations of a game and returns each detected result.
+    /// </summary>
+    public static IReadOnlyList<GameFinderResult> FindAllGames(GameInfo gameInfo, GameLibraries gameLibraries = GameLibraries.ALL)
+    {
+        return FindGame(gameInfo, gameLibraries)
+            .Where(result => result.IsOk)
+            .GroupBy(result => result.Path, StringComparer.OrdinalIgnoreCase)
+            .Select(group => group.First())
+            .ToList();
+    }
+
+    /// <summary>
     ///     Searches for the game install directory given its <see cref="GameInfo" />.
     /// </summary>
     /// <param name="gameInfo">Info object of a game.</param>

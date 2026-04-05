@@ -231,6 +231,7 @@
     <StyleInclude Source="/Models/Styles/Theme/CheckBoxStyle.axaml" />
     <StyleInclude Source="/Models/Styles/Theme/RadioButtonGroupStyle.axaml" />
     <StyleInclude Source="/Models/Styles/Theme/RadioButtonStyle.axaml" />
+    <StyleInclude Source="/Models/Styles/Theme/OptionsViewStyle.axaml" />
     <StyleInclude Source="/Models/Styles/Theme/ScrollViewerStyle.axaml" />
     <StyleInclude Source="/Models/Styles/Theme/ExpanderStyle.axaml" />
 </Styles>

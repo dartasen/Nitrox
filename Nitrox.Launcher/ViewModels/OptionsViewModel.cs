@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Avalonia;
@@ -15,13 +17,17 @@ using Nitrox.Launcher.ViewModels.Abstract;
 using Nitrox.Model.Core;
 using Nitrox.Model.Helper;
 using Nitrox.Model.Platforms.Discovery;
+using Nitrox.Model.Platforms.Discovery.InstallationFinders.Core;
 using Nitrox.Model.Platforms.Discovery.Models;
 using Nitrox.Model.Platforms.OS.Shared;
+using Nitrox.Model.Platforms.Store;
 
 namespace Nitrox.Launcher.ViewModels;
 
 internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageService storageService) : RoutableViewModelBase
 {
+        public ObservableCollection<KnownGame> KnownInstallations { get; } = [];
+
     private readonly IKeyValueStore keyValueStore = keyValueStore;
     private readonly StorageService storageService = storageService;
 
@@ -42,7 +48,7 @@ internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageSer
     private string logsFolderDir;
 
     [ObservableProperty]
-    private KnownGame selectedGame;
+    private KnownGame? selectedGame;
 
     [ObservableProperty]
     private bool showResetArgsBtn;
@@ -64,7 +70,16 @@ internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageSer
 
     internal override async Task ViewContentLoadAsync(CancellationToken cancellationToken = default)
     {
-        SelectedGame = new() { PathToGame = NitroxUser.GamePath, Platform = NitroxUser.GamePlatform?.Platform ?? Platform.NONE };
+        LoadKnownInstallations();
+
+        KnownGame? initialGameSelection = KnownInstallations.FirstOrDefault(game => PathsMatch(game.PathToGame, NitroxUser.GamePath))
+                                          ?? KnownInstallations.FirstOrDefault();
+
+        if (initialGameSelection is not null)
+        {
+            await SelectDetectedGameAsync(initialGameSelection);
+        }
+
         LaunchArgs = keyValueStore.GetLaunchArguments(GameInfo.Subnautica, DefaultLaunchArg);
         ProgramDataFolderDir = NitroxUser.AppDataPath;
         ScreenshotsFolderDir = NitroxUser.ScreenshotsPath;
@@ -74,7 +89,23 @@ internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageSer
         AllowMultipleGameInstances = keyValueStore.GetIsMultipleGameInstancesAllowed();
         UseBigPictureMode = keyValueStore.GetUseBigPictureMode();
         IsInReleaseMode = NitroxEnvironment.IsReleaseMode;
-        await Task.Run(() => SetTargetedSubnauticaPath(SelectedGame.PathToGame), cancellationToken).ContinueWithHandleError(ex => LauncherNotifier.Error(ex.Message));
+    }
+
+    [RelayCommand]
+    private async Task SelectDetectedGameAsync(KnownGame? game)
+    {
+        if (game is null)
+        {
+            return;
+        }
+
+        foreach (KnownGame installation in KnownInstallations)
+        {
+            installation.IsSelected = ReferenceEquals(installation, game);
+        }
+
+        SelectedGame = game;
+        await Task.Run(() => SetTargetedSubnauticaPath(game.PathToGame)).ContinueWithHandleError(ex => LauncherNotifier.Error(ex.Message));
     }
 
     private void SetTargetedSubnauticaPath(string path)
@@ -103,7 +134,7 @@ internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageSer
     [RelayCommand]
     private async Task SetGamePath()
     {
-        string selectedDirectory = await storageService.OpenFolderPickerAsync("Select Subnautica installation directory", SelectedGame.PathToGame);
+        string selectedDirectory = await storageService.OpenFolderPickerAsync("Select Subnautica installation directory", SelectedGame?.PathToGame ?? NitroxUser.GamePath);
         if (selectedDirectory == "")
         {
             return;
@@ -115,10 +146,22 @@ internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageSer
             return;
         }
 
-        if (!selectedDirectory.Equals(SelectedGame.PathToGame, StringComparison.OrdinalIgnoreCase))
+        KnownGame? existing = KnownInstallations.FirstOrDefault(game => PathsMatch(game.PathToGame, selectedDirectory));
+        if (existing is null)
         {
-            await Task.Run(() => SetTargetedSubnauticaPath(selectedDirectory));
-            SelectedGame = new() { PathToGame = NitroxUser.GamePath, Platform = NitroxUser.GamePlatform?.Platform ?? Platform.NONE };
+            existing = new KnownGame
+            {
+                PathToGame = selectedDirectory,
+                Platform = GamePlatforms.GetPlatformByGameDir(selectedDirectory)?.Platform ?? Platform.NONE,
+                SelectCommand = SelectDetectedGameCommand
+            };
+
+            KnownInstallations.Insert(0, existing);
+        }
+
+        if (!PathsMatch(existing.PathToGame, NitroxUser.GamePath))
+        {
+            await SelectDetectedGameAsync(existing);
             LauncherNotifier.Success("Applied changes");
         }
     }
@@ -151,7 +194,7 @@ internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageSer
     [RelayCommand]
     private void DisplaySteamOverlayNotification()
     {
-        if (AllowMultipleGameInstances && SelectedGame.Platform == Platform.STEAM)
+        if (AllowMultipleGameInstances && SelectedGame?.Platform == Platform.STEAM)
         {
             LauncherNotifier.Warning("Note: Enabling this option will disable Steam's in-game overlay. Disable this option to use Steam's overlay");
         }
@@ -196,4 +239,38 @@ internal partial class OptionsViewModel(IKeyValueStore keyValueStore, StorageSer
         }
         keyValueStore.SetBigPictureMode(value);
     }
+
+    private void LoadKnownInstallations()
+    {
+        KnownInstallations.Clear();
+
+        foreach (GameFinderResult detectedResult in GameInstallationFinder.FindAllGames(GameInfo.Subnautica))
+        {
+            Platform platform = GamePlatforms.GetPlatformByFlag(detectedResult.Origin)?.Platform
+                                ?? GamePlatforms.GetPlatformByGameDir(detectedResult.Path)?.Platform
+                                ?? Platform.NONE;
+
+            KnownInstallations.Add(new KnownGame
+            {
+                PathToGame = detectedResult.Path,
+                Platform = platform,
+                SelectCommand = SelectDetectedGameCommand
+            });
+        }
+
+        if (!string.IsNullOrWhiteSpace(NitroxUser.GamePath) && KnownInstallations.All(game => !PathsMatch(game.PathToGame, NitroxUser.GamePath)))
+        {
+            KnownInstallations.Insert(0, new KnownGame
+            {
+                PathToGame = NitroxUser.GamePath,
+                Platform = NitroxUser.GamePlatform?.Platform ?? Platform.NONE,
+                SelectCommand = SelectDetectedGameCommand
+            });
+        }
+    }
+
+    private static bool PathsMatch(string left, string right) =>
+        !string.IsNullOrWhiteSpace(left) &&
+        !string.IsNullOrWhiteSpace(right) &&
+        left.Equals(right, StringComparison.OrdinalIgnoreCase);
 }

@@ -13,9 +13,11 @@
     xmlns:controls="clr-namespace:Nitrox.Launcher.Models.Controls"
     xmlns:designer="clr-namespace:Nitrox.Launcher.ViewModels.Designer"
     xmlns:models="clr-namespace:Nitrox.Model.Platforms.Discovery.Models;assembly=Nitrox.Model">
+    
     <Design.DataContext>
         <designer:DesignOptionsViewModel />
     </Design.DataContext>
+
     <UserControl.Resources>
         <StackPanel Orientation="Vertical" x:Key="InfoIconTooltipText">
             <TextBlock>
@@ -48,43 +50,62 @@
                     <TextBlock FontSize="12" Text="Choose which Subnautica instance to use for multiplayer" />
                 </StackPanel>
                 <Border
-                    Background="{DynamicResource BrandPanelBackground}"
-                    CornerRadius="12"
-                    Padding="22,15">
-                    <Grid ColumnDefinitions=" Auto, *, Auto">
-                        <controls:RecolorImage
-                            Grid.Column="0"
-                            Height="36" Width="36"
-                            Margin="0,0,22,0"
-                            Source="{Binding SelectedGame.Platform, Converter={converters:PlatformToIconConverter}}"
-                            Stretch="Uniform"
-                            ToolTip.Tip="Welcome aboard, Captain!" />
-                        <StackPanel
-                            Grid.Column="1"
-                            HorizontalAlignment="Left"
-                            Spacing="2"
-                            VerticalAlignment="Center">
-                            <TextBlock
-                                FontSize="16"
-                                FontWeight="Bold"
-                                Text="{Binding SelectedGame.Platform, Converter={converters:ToStringConverter}}" />
-                            <SelectableTextBlock
-                                FontSize="14"
-                                Foreground="{DynamicResource BrandBlack}"
-                                Opacity="0.75"
-                                Text="{Binding SelectedGame.PathToGame, FallbackValue='Unknown path'}" />
-                        </StackPanel>
-                        <Button
-                            Classes="primary"
-                            Command="{Binding SetGamePathCommand}"
-                            Content="Change"
-                            Grid.Column="2"
-                            HorizontalAlignment="Right"
-                            Margin="22,0,0,0"
-                            ToolTip.Tip="Direct the launcher to your game's install location"
-                            Width="120" />
-                    </Grid>
+                    Classes="installationList"
+                    Padding="0">
+                    <ItemsControl ItemsSource="{Binding KnownInstallations}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button
+                                    Classes="installationOption"
+                                    Classes.selected="{Binding IsSelected}"
+                                    Command="{Binding SelectCommand}"
+                                    CommandParameter="{Binding}">
+                                    <Border Classes="installationRow">
+                                        <Grid ColumnDefinitions="Auto,Auto,*,Auto" ColumnSpacing="16" VerticalAlignment="Center">
+                                            <Grid Width="16" Height="16" VerticalAlignment="Center">
+                                                <Ellipse Classes="installationRadioOuter" />
+                                                <Ellipse Classes="installationRadioInner" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
+
+                                            <controls:RecolorImage
+                                                Grid.Column="1"
+                                                Height="44"
+                                                Width="44"
+                                                Source="{Binding Platform, Converter={converters:PlatformToIconConverter}}"
+                                                Stretch="Uniform" />
+
+                                            <StackPanel Grid.Column="2" Orientation="Vertical" Spacing="1" VerticalAlignment="Center">
+                                                <TextBlock
+                                                    FontSize="18"
+                                                    FontWeight="Bold"
+                                                    Text="{Binding Platform, Converter={converters:ToStringConverter}}" />
+                                                <SelectableTextBlock
+                                                    FontSize="12"
+                                                    Opacity="0.8"
+                                                    Text="{Binding PathToGame}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </Button>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </Border>
+
+                <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                    <TextBlock
+                        VerticalAlignment="Center"
+                        FontSize="12"
+                        Text="Manually add game installation" />
+                    <Button
+                        Classes="primary"
+                        Grid.Column="1"
+                        Width="210"
+                        HorizontalAlignment="Right"
+                        Command="{Binding SetGamePathCommand}"
+                        Content="Choose destination"
+                        ToolTip.Tip="Direct the launcher to your game's install location" />
+                </Grid>
             </StackPanel>
 
             <!--  Launch Arguments  -->

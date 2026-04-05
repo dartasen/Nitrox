@@ -7,11 +7,23 @@ internal class DesignOptionsViewModel : OptionsViewModel
 {
     public DesignOptionsViewModel() : base(null!, null!)
     {
-        SelectedGame = new KnownGame
+        KnownGame selectedGame = new()
         {
             PathToGame = @"C:\Users\Me\Games\Subnautica",
-            Platform = Platform.STEAM
+            Platform = Platform.STEAM,
+            SelectCommand = SelectDetectedGameCommand,
+            IsSelected = true
         };
+
+        SelectedGame = selectedGame;
+        KnownInstallations.Add(selectedGame);
+        KnownInstallations.Add(new KnownGame
+        {
+            PathToGame = @"D:\Games\Epic Games\Subnautica",
+            Platform = Platform.EPIC,
+            SelectCommand = SelectDetectedGameCommand
+        });
+
         LaunchArgs = "-vrmode none";
         ProgramDataFolderDir = @"C:\Users\Me\AppData\Roaming\Nitrox";
         ScreenshotsFolderDir = @"C:\Users\Me\AppData\Roaming\Nitrox\screenshots";
