@@ -23,7 +23,7 @@ public class Items
     private readonly EntityMetadataManager entityMetadataManager;
 
     /// <summary>
-    /// Whether or not <see cref="Inventory.Pickup"/> or a similar method is running (if greater than 0).
+    /// Whether <see cref="Inventory.Pickup"/> or a similar method is running (if greater than 0).
     /// It's useful to make the distinction between picking up items and normal item container transfers.
     /// </summary>
 
@@ -112,8 +112,13 @@ public class Items
         WorldEntity droppedItem;
         List<Entity> childrenEntities = GetPrefabChildren(gameObject, id, entityMetadataManager).ToList();
 
+        foreach (Entity entity in childrenEntities)
+        {
+            Log.Info(entity.ToString());
+        }
+        
         // If the item is dropped in a WaterPark we need to handle it differently
-        NitroxId parentId = null;
+        NitroxId? parentId = null;
         if (IsGlobalRootObject(gameObject) || (gameObject.GetComponent<Pickupable>() && TryGetParentWaterParkId(gameObject.transform.parent, out parentId)))
         {
             // We cast it to an entity type that is always seeable by clients
@@ -149,17 +154,17 @@ public class Items
         else
         {
             // Generic case
-            droppedItem = new(gameObject.transform.ToWorldDto(), level, classId, false, id, techType.Value.ToDto(), metadata.OrNull(), null, childrenEntities);
+            droppedItem = new WorldEntity(gameObject.transform.ToWorldDto(), level, classId, false, id, techType.Value.ToDto(), metadata.OrNull(), null, childrenEntities);
         }
 
         if (packetSender.Send(new EntitySpawnedByClient(droppedItem, true)))
         {
-            Log.Debug($"Dropping item: {droppedItem}");
+            Log.Info($"Dropping item: {droppedItem}");
         }
     }
 
     /// <summary>
-    /// Handles objects placed as figures and posters, or LEDLights so that we can spawn them accordingly afterwards.
+    /// Handles objects placed as figures and posters, or LEDLights so that we can spawn them accordingly afterward.
     /// </summary>
     public void Placed(GameObject gameObject, TechType techType)
     {
@@ -185,7 +190,7 @@ public class Items
                 placedItem = new GlobalRootEntity(gameObject.transform.ToLocalDto(), level, classId, true, id, techType.ToDto(), metadata.OrNull(), parentId, childrenEntities);
                 break;
             default:
-                // If the object is not under a SubRoot nor in GlobalRoot, it'll be under a CellRoot but we still want to remember its state
+                // If the object is not under a SubRoot nor in GlobalRoot it'll be under a CellRoot, but we still want to remember its state
                 placedItem = new PlacedWorldEntity(gameObject.transform.ToWorldDto(), level, classId, true, id, techType.ToDto(), metadata.OrNull(), null, childrenEntities);
                 break;
         }
@@ -198,8 +203,8 @@ public class Items
 
     // This function will record any notable children of the dropped item as a PrefabChildEntity.  In this case, a 'notable'
     // child is one that UWE has tagged with a PrefabIdentifier (class id) and has entity metadata that can be extracted. An
-    // example would be recording a Battery PrefabChild inside of a Flashlight WorldEntity.
-    public static IEnumerable<Entity> GetPrefabChildren(GameObject gameObject, NitroxId parentId, EntityMetadataManager entityMetadataManager)
+    // example would be recording a Battery PrefabChild inside Flashlight WorldEntity.
+    private static IEnumerable<Entity> GetPrefabChildren(GameObject gameObject, NitroxId parentId, EntityMetadataManager entityMetadataManager)
     {
         foreach (IGrouping<string, PrefabIdentifier> prefabGroup in gameObject.GetAllComponentsInChildren<PrefabIdentifier>()
                                                                               .Where(prefab => prefab.gameObject != gameObject)
@@ -233,7 +238,7 @@ public class Items
         InventoryItemEntity inventoryItemEntity = ConvertToInventoryItemEntity(gameObject, parentId, entityMetadataManager);
 
         // Some picked up entities are not known by the server for several reasons.  First it can be picked up via a spawn item command.  Another
-        // example is that some obects are not 'real' objects until they are clicked and end up spawning a prefab.  For example, the fire extinguisher
+        // example is that some objects are not 'real' objects until they are clicked and end up spawning a prefab.  For example, the fire extinguisher
         // in the escape pod (mono: IntroFireExtinguisherHandTarget) or Creepvine seeds (mono: PickupPrefab).  When clicked, these spawn new prefabs
         // directly into the player's inventory.  These will ultimately be registered server side with the above inventoryItemEntity.
         entities.MarkAsSpawned(inventoryItemEntity);
