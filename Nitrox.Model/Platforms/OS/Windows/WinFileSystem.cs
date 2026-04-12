@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.AccessControl;
@@ -84,8 +84,8 @@ internal class WinFileSystem : FileSystem
             DirectoryInfo dir = new(directory);
             DirectorySecurity flags = dir.GetAccessControl();
             flags.AddAccessRule(new(identity, FileSystemRights.FullControl, InheritanceFlags.None, PropagationFlags.InheritOnly, AccessControlType.Allow));
-            flags.AddAccessRule(new (identity, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit, PropagationFlags.InheritOnly, AccessControlType.Allow));
-            flags.AddAccessRule(new (identity, FileSystemRights.FullControl, InheritanceFlags.ObjectInherit, PropagationFlags.InheritOnly, AccessControlType.Allow));
+            flags.AddAccessRule(new(identity, FileSystemRights.FullControl, InheritanceFlags.ContainerInherit, PropagationFlags.InheritOnly, AccessControlType.Allow));
+            flags.AddAccessRule(new(identity, FileSystemRights.FullControl, InheritanceFlags.ObjectInherit, PropagationFlags.InheritOnly, AccessControlType.Allow));
             dir.SetAccessControl(flags);
             return true;
         }

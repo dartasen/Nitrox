@@ -9,7 +9,7 @@ namespace Nitrox.Model.Platforms.OS.Shared;
 public class ConfigFileKeyValueStore : IKeyValueStore
 {
     private bool hasLoaded = false;
-    private readonly Dictionary<string, object> keyValuePairs = new();
+    private readonly Dictionary<string, object> keyValuePairs = [];
     public string FolderPath { get; } = NitroxUser.AppDataPath;
     public string FilePath => Path.Combine(FolderPath, "nitrox.cfg");
 
