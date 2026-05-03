@@ -42,6 +42,8 @@ internal partial class MainWindowViewModel : ViewModelBase, IRoutingScreen
 
     public AvaloniaList<NotificationItem> Notifications { get; init; } = [];
 
+    public NotificationCenterViewModel NotificationCenter { get; } = new();
+
     public MainWindowViewModel(
         Func<Window> mainWindowProvider,
         DialogService dialogService,
@@ -75,6 +77,10 @@ internal partial class MainWindowViewModel : ViewModelBase, IRoutingScreen
         });
         this.RegisterMessageListener<NotificationCloseMessage, MainWindowViewModel>(static async (message, vm) =>
         {
+            if (message.Item.IsDismissed)
+            {
+                return;
+            }
             message.Item.IsDismissed = true;
             await Task.Delay(1000); // Wait for animations
             if (!IsDesignMode) // Prevent design preview crashes

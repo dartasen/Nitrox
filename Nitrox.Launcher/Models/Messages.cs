@@ -11,7 +11,7 @@ internal record SaveDeletedMessage(string SaveName);
 
 internal record NotificationAddMessage(NotificationItem Item);
 
-internal record NotificationCloseMessage(NotificationItem Item);
+internal record NotificationCloseMessage(NotificationItem Item, bool UserDismissed = false);
 
 internal record ShowViewMessage
 {

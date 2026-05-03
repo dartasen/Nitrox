@@ -1,0 +1,203 @@
+<UserControl
+    x:Class="Nitrox.Launcher.Views.NotificationCenterView"
+    x:DataType="vm:NotificationCenterViewModel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:converters="clr-namespace:Nitrox.Launcher.Models.Converters"
+    xmlns:design="clr-namespace:Nitrox.Launcher.Models.Design"
+    xmlns:vm="clr-namespace:Nitrox.Launcher.ViewModels"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <UserControl.Styles>
+        <!--
+            Bell trigger: semi-transparent pill so the button is always visible
+            regardless of whether the launcher is in light or dark theme.
+            Hover feedback (opacity) is handled by the global ButtonStyle.
+        -->
+        <Style Selector="Button.bell">
+            <Setter Property="Background" Value="{DynamicResource BrandBellBackground}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="CornerRadius" Value="8" />
+            <Setter Property="Padding" Value="9" />
+        </Style>
+
+        <!--  Notification item row  -->
+        <Style Selector="Border.notification-item">
+            <Setter Property="BorderThickness" Value="3,0,0,0" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandBorder}" />
+            <Setter Property="Padding" Value="10,9,12,9" />
+        </Style>
+        <!--
+            Svg.Css is a plain string — DynamicResource cannot be used inside CSS values.
+            The hex literals below intentionally mirror the matching Brand* Color resources
+            in Nitrox.axaml (BrandInformation, BrandSuccess, BrandWarning, BrandError).
+        -->
+        <Style Selector="Border.notification-item.info">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandInformation}" />
+            <Style Selector="^ :is(Svg).icon">
+                <Setter Property="Path" Value="/Assets/Icons/info.svg" />
+                <Setter Property="Css" Value="* { fill: #007BFF; stroke: #007BFF; }" />
+            </Style>
+        </Style>
+        <Style Selector="Border.notification-item.success">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandSuccess}" />
+            <Style Selector="^ :is(Svg).icon">
+                <Setter Property="Path" Value="/Assets/Icons/success.svg" />
+                <Setter Property="Css" Value="* { fill: #11AD45; stroke: #11AD45; }" />
+            </Style>
+        </Style>
+        <Style Selector="Border.notification-item.warning">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandWarning}" />
+            <Style Selector="^ :is(Svg).icon">
+                <Setter Property="Path" Value="/Assets/Icons/warning.svg" />
+                <Setter Property="Css" Value="* { fill: #F5A300; stroke: #F5A300; }" />
+            </Style>
+        </Style>
+        <Style Selector="Border.notification-item.error">
+            <Setter Property="BorderBrush" Value="{DynamicResource BrandError}" />
+            <Style Selector="^ :is(Svg).icon">
+                <Setter Property="Path" Value="/Assets/Icons/error.svg" />
+                <Setter Property="Css" Value="* { fill: #E60914; stroke: #E60914; }" />
+            </Style>
+        </Style>
+        <Style Selector="Border.notification-item.unread">
+            <Setter Property="Background" Value="{DynamicResource BrandBorderBackground}" />
+            <Style Selector="^ TextBlock.message">
+                <Setter Property="FontWeight" Value="SemiBold" />
+            </Style>
+        </Style>
+    </UserControl.Styles>
+
+    <Button
+        Classes="bell"
+        Command="{Binding MarkAllAsReadCommand}"
+        ToolTip.Tip="Notifications">
+        <Button.Flyout>
+            <Flyout Placement="BottomEdgeAlignedRight">
+                <Border
+                    Background="{DynamicResource BrandControlBackground}"
+                    BorderBrush="{DynamicResource BrandBorder}"
+                    BorderThickness="1"
+                    BoxShadow="0 8 32 0 #60000000"
+                    ClipToBounds="True"
+                    CornerRadius="8"
+                    MaxHeight="460"
+                    Width="340">
+                    <DockPanel>
+                        <!--  Header  -->
+                        <Border
+                            BorderBrush="{DynamicResource BrandBorder}"
+                            BorderThickness="0,0,0,1"
+                            DockPanel.Dock="Top"
+                            Padding="14,11">
+                            <Grid ColumnDefinitions="*,Auto">
+                                <TextBlock
+                                    FontSize="13"
+                                    FontWeight="SemiBold"
+                                    Text="Notifications"
+                                    VerticalAlignment="Center" />
+                                <Button
+                                    Classes="anycontent"
+                                    Command="{Binding ClearHistoryCommand}"
+                                    Grid.Column="1"
+                                    IsVisible="{Binding HasHistory}"
+                                    Opacity="0.55"
+                                    Padding="4,2"
+                                    ToolTip.Tip="Clear all">
+                                    <TextBlock FontSize="11" Text="Clear all" />
+                                </Button>
+                            </Grid>
+                        </Border>
+                        <!--  Empty state  -->
+                        <TextBlock
+                            DockPanel.Dock="Top"
+                            FontSize="12"
+                            Foreground="{DynamicResource BrandSubText}"
+                            HorizontalAlignment="Center"
+                            IsVisible="{Binding !HasHistory}"
+                            Margin="0,48,0,48"
+                            Text="No notifications" />
+                        <!--  Notification list  -->
+                        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding History}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate x:DataType="design:NotificationItem">
+                                        <!--  Bottom separator  -->
+                                        <Border BorderBrush="{DynamicResource BrandBorder}" BorderThickness="0,0,0,1">
+                                            <!--  Left color strip  -->
+                                            <Border
+                                                Classes.error="{Binding Type, Converter={converters:EqualityConverter}, ConverterParameter={x:Static NotificationType.Error}}"
+                                                Classes.info="{Binding Type, Converter={converters:EqualityConverter}, ConverterParameter={x:Static NotificationType.Information}}"
+                                                Classes.success="{Binding Type, Converter={converters:EqualityConverter}, ConverterParameter={x:Static NotificationType.Success}}"
+                                                Classes.unread="{Binding !IsRead}"
+                                                Classes.warning="{Binding Type, Converter={converters:EqualityConverter}, ConverterParameter={x:Static NotificationType.Warning}}"
+                                                Classes="notification-item">
+                                                <Grid ColumnDefinitions="24,*">
+                                                    <Svg
+                                                        Classes="icon"
+                                                        Grid.Column="0"
+                                                        Height="15"
+                                                        HorizontalAlignment="Center"
+                                                        Margin="0,2,0,0"
+                                                        VerticalAlignment="Top"
+                                                        Width="15" />
+                                                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto">
+                                                        <TextBlock
+                                                            Grid.Row="0"
+                                                            Classes="message"
+                                                            FontSize="12"
+                                                            LineHeight="17"
+                                                            Text="{Binding Message}"
+                                                            TextWrapping="Wrap" />
+                                                        <TextBlock
+                                                            Grid.Row="1"
+                                                            FontSize="10"
+                                                            Foreground="{DynamicResource BrandSubText}"
+                                                            HorizontalAlignment="Right"
+                                                            Margin="0,4,0,0"
+                                                            Text="{Binding Timestamp, Converter={converters:DateToRelativeDateConverter}}" />
+                                                    </Grid>
+                                                </Grid>
+                                            </Border>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </DockPanel>
+                </Border>
+            </Flyout>
+        </Button.Flyout>
+
+        <!--
+            Bell icon uses BrandBellSvgStyle (inverse of BrandSvgStyle):
+            white on the dark pill in light mode, black on the white pill in dark mode.
+        -->
+        <Panel Height="24" Width="24">
+            <Svg
+                Css="{DynamicResource BrandBellSvgStyle}"
+                Height="20"
+                HorizontalAlignment="Center"
+                Path="/Assets/Icons/bell.svg"
+                VerticalAlignment="Center"
+                Width="20" />
+            <Border
+                Background="{DynamicResource BrandError}"
+                CornerRadius="5"
+                Height="10"
+                HorizontalAlignment="Right"
+                IsVisible="{Binding HasUnread}"
+                MinWidth="10"
+                VerticalAlignment="Top">
+                <!--  Badge always uses literal White: BrandWhite inverts to Black in dark mode,
+                      which would be illegible on the BrandError red background.  -->
+                <TextBlock
+                    FontSize="7"
+                    FontWeight="Bold"
+                    Foreground="White"
+                    HorizontalAlignment="Center"
+                    Margin="2,0"
+                    Text="{Binding UnreadCount}"
+                    VerticalAlignment="Center" />
+            </Border>
+        </Panel>
+    </Button>
+</UserControl>

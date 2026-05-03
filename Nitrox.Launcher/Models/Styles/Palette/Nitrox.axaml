@@ -30,6 +30,10 @@
 
             <!--  Misc  -->
             <x:String x:Key="BrandSvgStyle">* { fill: #000; stroke: #000; }</x:String>
+            <!--  Overlay pill for floating buttons (e.g. notification bell) over content  -->
+            <Color x:Key="BrandBellBackground">#80FFFFFF</Color>
+            <!--  Bell icon CSS: inverse of BrandSvgStyle — dark icon on light pill  -->
+            <x:String x:Key="BrandBellSvgStyle">* { fill: #000; stroke: #000; }</x:String>
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
             <Color x:Key="BrandWhite">#000000</Color>
@@ -46,6 +50,9 @@
             <Color x:Key="BrandScrollThumbPointerOver">#3F3F3F</Color>
             <Color x:Key="BrandScrollThumbPressed">#8F8F8F</Color>
             <x:String x:Key="BrandSvgStyle">* { fill: #fff; stroke: #fff; }</x:String>
+            <Color x:Key="BrandBellBackground">#A0000000</Color>
+            <!--  Bell icon CSS: inverse of BrandSvgStyle — white icon on dark pill  -->
+            <x:String x:Key="BrandBellSvgStyle">* { fill: #fff; stroke: #fff; }</x:String>
         </ResourceDictionary>
     </ResourceDictionary.ThemeDictionaries>
 </ResourceDictionary>

@@ -103,6 +103,7 @@
             </Style>
         </Style>
 
+
         <Style Selector=".notifications Border">
             <Setter Property="Transitions">
                 <Transitions>
@@ -293,11 +294,11 @@
             </Border>
 
             <!--  Navigated content (right side)  -->
-            <ContentControl
-                Classes="content"
-                Content="{Binding ActiveViewModel, TargetNullValue='No view set. You should not see this message.'}"
-                Grid.Column="1">
-                <ContentControl.ContentTemplate>
+            <Panel Grid.Column="1">
+                <ContentControl
+                    Classes="content"
+                    Content="{Binding ActiveViewModel, TargetNullValue='No view set. You should not see this message.'}">
+                    <ContentControl.ContentTemplate>
                     <design:MultiDataTemplate UseCache="False">
                         <!--  Null view (which will be a string, see TargetNullValue)  -->
                         <DataTemplate x:DataType="system:String">
@@ -370,7 +371,14 @@
                         </DataTemplate>
                     </design:MultiDataTemplate>
                 </ContentControl.ContentTemplate>
-            </ContentControl>
+                </ContentControl>
+                <views:NotificationCenterView
+                    DataContext="{Binding NotificationCenter}"
+                    HorizontalAlignment="Right"
+                    Margin="0,32,16,0"
+                    VerticalAlignment="Top"
+                    ZIndex="50" />
+            </Panel>
         </Grid>
 
         <!--  Notifications  -->
