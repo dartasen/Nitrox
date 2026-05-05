@@ -72,6 +72,13 @@
         ToolTip.Tip="Notifications">
         <Button.Flyout>
             <Flyout Placement="BottomEdgeAlignedRight">
+                <Flyout.FlyoutPresenterTheme>
+                    <ControlTheme TargetType="FlyoutPresenter">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="Padding" Value="0" />
+                    </ControlTheme>
+                </Flyout.FlyoutPresenterTheme>
                 <Border
                     Background="{DynamicResource BrandPanelBackground}"
                     BorderBrush="{DynamicResource BrandBorder}"
@@ -135,16 +142,15 @@
                                                 Classes.unread="{Binding !IsRead}"
                                                 Classes.warning="{Binding Type, Converter={converters:EqualityConverter}, ConverterParameter={x:Static NotificationType.Warning}}"
                                                 Classes="notification-item">
-                                                <Grid ColumnDefinitions="24,*">
+                                                <Grid ColumnDefinitions="15,8,*">
                                                     <Svg
                                                         Classes="icon"
                                                         Grid.Column="0"
                                                         Height="15"
-                                                        HorizontalAlignment="Center"
                                                         Margin="0,2,0,0"
                                                         VerticalAlignment="Top"
                                                         Width="15" />
-                                                    <Grid Grid.Column="1" RowDefinitions="Auto,Auto">
+                                                    <Grid Grid.Column="2" RowDefinitions="Auto,Auto">
                                                         <TextBlock
                                                             Grid.Row="0"
                                                             Classes="message"
