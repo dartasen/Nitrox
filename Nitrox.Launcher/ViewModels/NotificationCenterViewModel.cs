@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Avalonia.Collections;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -33,8 +32,11 @@ internal partial class NotificationCenterViewModel : ObservableObject, IMessageR
                 {
                     return; // 7s re-fire after user already dismissed
                 }
-                message.Item.PropertyChanged += vm.OnItemReadChanged;
-                message.Item.IsRead = message.UserDismissed; // dismissed → stays read; expired → triggers unread
+                if (!message.UserDismissed)
+                {
+                    message.Item.IsRead = false;
+                    vm.UnreadCount++;
+                }
                 vm.History.Insert(0, message.Item);
             });
         });
@@ -47,7 +49,6 @@ internal partial class NotificationCenterViewModel : ObservableObject, IMessageR
     {
         foreach (NotificationItem item in History)
         {
-            item.PropertyChanged -= OnItemReadChanged;
             item.IsRead = true;
         }
         UnreadCount = 0;
@@ -56,20 +57,7 @@ internal partial class NotificationCenterViewModel : ObservableObject, IMessageR
     [RelayCommand]
     public void ClearHistory()
     {
-        foreach (NotificationItem item in History)
-        {
-            item.PropertyChanged -= OnItemReadChanged;
-        }
         History.Clear();
         UnreadCount = 0;
-    }
-
-    private void OnItemReadChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        if (e.PropertyName != nameof(NotificationItem.IsRead) || sender is not NotificationItem { IsRead: false })
-        {
-            return;
-        }
-        UnreadCount++;
     }
 }
