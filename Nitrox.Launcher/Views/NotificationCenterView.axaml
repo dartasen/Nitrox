@@ -73,7 +73,7 @@
         <Button.Flyout>
             <Flyout Placement="BottomEdgeAlignedRight">
                 <Border
-                    Background="{DynamicResource BrandControlBackground}"
+                    Background="{DynamicResource BrandPanelBackground}"
                     BorderBrush="{DynamicResource BrandBorder}"
                     BorderThickness="1"
                     BoxShadow="0 8 32 0 #60000000"
@@ -118,6 +118,11 @@
                         <!--  Notification list  -->
                         <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                             <ItemsControl ItemsSource="{Binding History}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Vertical" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate x:DataType="design:NotificationItem">
                                         <!--  Bottom separator  -->
