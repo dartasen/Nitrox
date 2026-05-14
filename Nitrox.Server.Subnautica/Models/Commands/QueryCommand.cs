@@ -40,8 +40,9 @@ internal sealed class QueryCommand(EntityRegistry entityRegistry, SimulationOwne
             {
                 builder.AppendLine("   └ Child");
                 builder.AppendLine($"     └ Type: {childEntity.GetType().Name}");
+                builder.AppendLine($"     └ TechType: {childEntity.TechType}");
                 builder.AppendLine($"     └ Id: {childEntity.Id}");
-                builder.AppendLine($"     └ Metadata: {childEntity.Metadata?.ToString() ?? "none"}");
+                builder.AppendLine($"     └ Metadata: {childEntity.Metadata?.ToString() ?? "<null>"}");
                 builder.AppendLine($"     └ Children: {childEntity.ChildEntities.Count}");
             }
         }
@@ -52,7 +53,7 @@ internal sealed class QueryCommand(EntityRegistry entityRegistry, SimulationOwne
             builder.AppendLine($" └ ClassId: {worldEntity.ClassId}");
             builder.AppendLine($" └ Level: {worldEntity.Level}");
             builder.AppendLine($" └ SpawnedByServer: {worldEntity.SpawnedByServer}");
-            builder.AppendLine($" └ {worldEntity.Transform}");
+            builder.AppendLine($" └ Trasnform: {worldEntity.Transform}");
             builder.AppendLine($" └ Cell: {(worldEntity is GlobalRootEntity ? "global root" : worldEntity.AbsoluteEntityCell.ToString())}");
         }
 

@@ -21,7 +21,7 @@ public static class BatteryChildEntityHelper
 
     public static void TryPopulateInstalledBattery(GameObject gameObject, List<Entity> toPopulate, NitroxId parentId)
     {
-        if (gameObject.TryGetComponent(out EnergyMixin? energyMixin) && energyMixin.HasItem())
+        if (gameObject.TryGetComponent(out EnergyMixin? energyMixin))
         {
             PopulateInstalledBattery(energyMixin, toPopulate, parentId);
         }
