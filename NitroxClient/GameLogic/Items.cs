@@ -15,7 +15,7 @@ using UnityEngine;
 
 namespace NitroxClient.GameLogic;
 
-public class Items
+public sealed class Items
 {
     private readonly IPacketSender packetSender;
     private readonly Entities entities;
@@ -42,7 +42,7 @@ public class Items
         // PickedUp was designed for this, but also works when an item is being moved into e.g. a vehicle's storage.
         // Consider making a new packet type if PickedUp is found to be impractical for this case.
 
-        if (!Player.main.TryGetNitroxId(out NitroxId playerId))
+        if (!Player.main.TryGetNitroxId(out NitroxId? playerId))
         {
             Log.ErrorOnce($"[{nameof(Items)}] Player has no id! Could not set parent of picked up item {gameObject.name}.");
             return;
@@ -126,14 +126,14 @@ public class Items
             // Dropped patch is called in OxygenPipe.PlaceInWorld which is why OxygenPipe.ghostModel is valid
             IPipeConnection parentConnection = OxygenPipe.ghostModel.GetParent();
             if (parentConnection == null || !parentConnection.GetGameObject() ||
-                !parentConnection.GetGameObject().TryGetNitroxId(out NitroxId parentPipeId))
+                !parentConnection.GetGameObject().TryGetNitroxId(out NitroxId? parentPipeId))
             {
                 Log.Error($"Couldn't find a valid reference to the OxygenPipe's parent pipe");
                 return;
             }
             IPipeConnection rootConnection = parentConnection.GetRoot();
             if (rootConnection == null || !rootConnection.GetGameObject() ||
-                !rootConnection.GetGameObject().TryGetNitroxId(out NitroxId rootPipeId))
+                !rootConnection.GetGameObject().TryGetNitroxId(out NitroxId? rootPipeId))
             {
                 Log.Error($"Couldn't find a valid reference to the OxygenPipe's root pipe");
                 return;
@@ -154,7 +154,7 @@ public class Items
 
         if (packetSender.Send(new EntitySpawnedByClient(droppedItem, true)))
         {
-            Log.Debug($"Dropping item: {droppedItem}");
+            Log.InGame($"Dropping item: {droppedItem}");
         }
     }
 
@@ -181,7 +181,7 @@ public class Items
             case not null when IsGlobalRootObject(gameObject):
                 placedItem = new GlobalRootEntity(gameObject.transform.ToWorldDto(), level, classId, true, id, techType.ToDto(), metadata.OrNull(), null, childrenEntities);
                 break;
-            case not null when Player.main.AliveOrNull()?.GetCurrentSub().AliveOrNull()?.TryGetNitroxId(out NitroxId parentId) == true:
+            case not null when Player.main.AliveOrNull()?.GetCurrentSub().AliveOrNull()?.TryGetNitroxId(out NitroxId? parentId) == true:
                 placedItem = new GlobalRootEntity(gameObject.transform.ToLocalDto(), level, classId, true, id, techType.ToDto(), metadata.OrNull(), parentId, childrenEntities);
                 break;
             default:
@@ -233,7 +233,7 @@ public class Items
         InventoryItemEntity inventoryItemEntity = ConvertToInventoryItemEntity(gameObject, parentId, entityMetadataManager);
 
         // Some picked up entities are not known by the server for several reasons.  First it can be picked up via a spawn item command.  Another
-        // example is that some obects are not 'real' objects until they are clicked and end up spawning a prefab.  For example, the fire extinguisher
+        // example is that some objects are not 'real' objects until they are clicked and end up spawning a prefab.  For example, the fire extinguisher
         // in the escape pod (mono: IntroFireExtinguisherHandTarget) or Creepvine seeds (mono: PickupPrefab).  When clicked, these spawn new prefabs
         // directly into the player's inventory.  These will ultimately be registered server side with the above inventoryItemEntity.
         entities.MarkAsSpawned(inventoryItemEntity);
@@ -263,7 +263,7 @@ public class Items
     /// Some items might be remotely simulated if they were dropped by other players.  We'll want to remove
     /// any remote tracking when we actively handle the item.
     /// </summary>
-    private void RemoveAnyRemoteControl(GameObject gameObject)
+    private static void RemoveAnyRemoteControl(GameObject gameObject)
     {
         UnityEngine.Object.Destroy(gameObject.GetComponent<RemotelyControlled>());
     }

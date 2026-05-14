@@ -16,7 +16,7 @@ public class InstalledBatteryEntitySpawner : SyncEntitySpawner<InstalledBatteryE
 {
     protected override IEnumerator SpawnAsync(InstalledBatteryEntity entity, TaskResult<Optional<GameObject>> result)
     {
-        if (!CanSpawn(entity, out EnergyMixin? energyMixin, out string errorLog))
+        if (!CanSpawn(entity, out EnergyMixin? energyMixin, out string? errorLog))
         {
             Log.Error(errorLog);
             result.Set(Optional.Empty);
@@ -34,11 +34,11 @@ public class InstalledBatteryEntitySpawner : SyncEntitySpawner<InstalledBatteryE
 
     protected override bool SpawnSync(InstalledBatteryEntity entity, TaskResult<Optional<GameObject>> result)
     {
-        if (!DefaultWorldEntitySpawner.TryGetCachedPrefab(out GameObject prefab, entity.TechType.ToUnity()))
+        if (!DefaultWorldEntitySpawner.TryGetCachedPrefab(out GameObject? prefab, entity.TechType.ToUnity()))
         {
             return false;
         }
-        if (!CanSpawn(entity, out EnergyMixin energyMixin, out string errorLog))
+        if (!CanSpawn(entity, out EnergyMixin? energyMixin, out string? errorLog))
         {
             Log.Error(errorLog);
             return true;
@@ -54,7 +54,7 @@ public class InstalledBatteryEntitySpawner : SyncEntitySpawner<InstalledBatteryE
 
     protected override bool SpawnsOwnChildren(InstalledBatteryEntity entity) => false;
 
-    private bool CanSpawn(InstalledBatteryEntity entity, [NotNullWhen(true)] out EnergyMixin? energyMixin, [NotNullWhen(false)] out string? errorLog)
+    private static bool CanSpawn(InstalledBatteryEntity entity, [NotNullWhen(true)] out EnergyMixin? energyMixin, [NotNullWhen(false)] out string? errorLog)
     {
         if (!NitroxEntity.TryGetObjectFrom(entity.ParentId, out GameObject parentObject))
         {
@@ -66,16 +66,19 @@ public class InstalledBatteryEntitySpawner : SyncEntitySpawner<InstalledBatteryE
         energyMixin = parentObject.GetAllComponentsInChildren<EnergyMixin>()
                                   .ElementAtOrDefault(entity.ComponentIndex);
 
-        if (energyMixin == null)
+        if (!energyMixin)
         {
             errorLog = $"Unable to find EnergyMixin on parent to install battery {entity}";
             return false;
         }
+
+        Log.InGame("Can spawn battery, " + entity.TechType.ToString());
+
         errorLog = null;
         return true;
     }
 
-    private void SetupObject(GameObject gameObject, EnergyMixin energyMixin)
+    private static void SetupObject(GameObject gameObject, EnergyMixin energyMixin)
     {
         energyMixin.Initialize();
         energyMixin.RestoreBattery();

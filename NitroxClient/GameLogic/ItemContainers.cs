@@ -35,7 +35,7 @@ public class ItemContainers
             return;
         }
 
-        if (!InventoryContainerHelper.TryGetOwnerId(containerTransform, out NitroxId ownerId))
+        if (!InventoryContainerHelper.TryGetOwnerId(containerTransform, out NitroxId? ownerId))
         {
             // Error logging is done in the try function
             return;
@@ -48,7 +48,7 @@ public class ItemContainers
             return;
         }
 
-        if (!pickupable.TryGetIdOrWarn(out NitroxId itemId))
+        if (!pickupable.TryGetIdOrWarn(out NitroxId? itemId))
         {
             return;
         }
@@ -68,11 +68,11 @@ public class ItemContainers
 
         if (packetSender.Send(new EntityReparented(itemId, ownerId)))
         {
-            Log.Debug($"Sent: Added item ({itemId}) of type {pickupable.GetTechType()} to container {containerTransform.gameObject.GetFullHierarchyPath()}");
+            Log.InGame($"Sent: Added item ({itemId}) of type {pickupable.GetTechType()} to container {containerTransform.gameObject.GetFullHierarchyPath()}");
         }
     }
 
-    public void AddItem(GameObject item, NitroxId containerId)
+    public static void AddItem(GameObject item, NitroxId containerId)
     {
         Optional<GameObject> owner = NitroxEntity.GetObjectFrom(containerId);
         if (!owner.HasValue)
@@ -80,6 +80,7 @@ public class ItemContainers
             Log.Error($"Unable to find inventory container with id {containerId} for {item.name}");
             return;
         }
+
         Optional<ItemsContainer> opContainer = InventoryContainerHelper.TryGetContainerByOwner(owner.Value);
         if (!opContainer.HasValue)
         {
@@ -93,12 +94,14 @@ public class ItemContainers
         using (PacketSuppressor<EntityReparented>.Suppress())
         {
             container.UnsafeAdd(new InventoryItem(pickupable));
-            Log.Debug($"Received: Added item {pickupable.GetTechType()} to container {owner.Value.GetFullHierarchyPath()}");
+            Log.InGame($"Received: Added item {pickupable.GetTechType()} to container {owner.Value.GetFullHierarchyPath()}");
         }
     }
 
     public void BroadcastBatteryAdd(GameObject battery, EnergyMixin energyMixin, TechType techType)
     {
+        Log.InGame($"Broadcasting battery add {techType.ToString()}");
+
         if (!battery.TryGetIdOrWarn(out NitroxId id))
         {
             return;

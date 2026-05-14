@@ -10,8 +10,9 @@ namespace NitroxClient.GameLogic.Helper;
 
 public static class VehicleChildEntityHelper
 {
-    private static readonly HashSet<Type> interactiveChildTypes = new HashSet<Type> // we must sync ids of these types when creating vehicles (mainly cyclops)
-    {
+    // we must sync ids of these types when creating vehicles (mainly cyclops)
+    private static readonly HashSet<Type> interactiveChildTypes =
+    [
         typeof(Openable),
         typeof(CyclopsLocker),
         typeof(Fabricator),
@@ -28,14 +29,14 @@ public static class VehicleChildEntityHelper
         typeof(WeldablePoint),
         typeof(CyclopsVehicleStorageTerminalManager),
         typeof(CyclopsLightingPanel)
-    };
+    ];
 
     // The seamoth and exosuit both have an EnergyMixin at the top level, the exosuit has a second one under BatterySlot2
-    private static readonly HashSet<string> batteryRelativePaths = new HashSet<string>
-    {
+    private static readonly HashSet<string> batteryRelativePaths =
+    [
         "",
         "BatterySlot2"
-    };
+    ];
 
     public static void PopulateChildren(NitroxId vehicleId, string vehiclePath, List<Entity> toPopulate, GameObject current)
     {
@@ -52,7 +53,7 @@ public static class VehicleChildEntityHelper
                 {
                     NitroxId id = NitroxEntity.GetIdOrGenerateNew(mono.gameObject);
 
-                    PathBasedChildEntity pathBasedChildEntity = new(relativePathName, id, null, null, vehicleId, new());
+                    PathBasedChildEntity pathBasedChildEntity = new(relativePathName, id, null, null, vehicleId, []);
                     toPopulate.Add(pathBasedChildEntity);
 
                     if (mono is BatterySource batterySource) // cyclops has a battery source as a deeply-nested child

@@ -100,7 +100,7 @@ public sealed class PlayerInitialSyncProcessor : InitialSyncProcessor
                 pickupable.Initialize();
 
                 item.PickedUpByPlayer(gameObject, techType);
-                itemContainers.AddItem(gameObject, localPlayerId);
+                ItemContainers.AddItem(gameObject, localPlayerId);
             }
         }
     }
