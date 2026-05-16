@@ -1,5 +1,4 @@
 using System.Runtime.Versioning;
-using Nitrox.Model.Platforms.OS.MacOS;
 using Nitrox.Test.Model.Platforms;
 
 namespace Nitrox.Model.Platforms.OS.MacOS;

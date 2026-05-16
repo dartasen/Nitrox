@@ -13,7 +13,15 @@ namespace Nitrox.Model.Platforms.OS.MacOS;
 public sealed partial class MacProcessEx : ProcessExBase
 {
     private bool disposed;
-    public override IntPtr Handle => IntPtr.Zero;
+    private IntPtr taskPort;
+    private bool ownsTaskPort;
+
+    ~MacProcessEx()
+    {
+        Dispose(disposing: false);
+    }
+
+    public override IntPtr Handle => taskPort;
 
     public override ProcessModuleEx MainModule
     {
@@ -33,21 +41,25 @@ public sealed partial class MacProcessEx : ProcessExBase
 
     public MacProcessEx(int pid) : base(pid)
     {
+        InitializeTaskPort(pid);
     }
 
     public MacProcessEx(Process process) : base(process)
     {
+        InitializeTaskPort(process.Id);
     }
 
     public new static bool IsElevated() => geteuid() == 0;
 
     public override byte[] ReadMemory(IntPtr address, int size)
     {
+        EnsureTaskPortAvailable();
+
         byte[] buffer = new byte[size];
         GCHandle handle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
         try
         {
-            if (vm_read_overwrite(Handle, address, new IntPtr(size), handle.AddrOfPinnedObject(), out IntPtr _) != 0)
+            if (vm_read_overwrite(taskPort, address, new UIntPtr((uint)size), handle.AddrOfPinnedObject(), out UIntPtr _) != 0)
             {
                 throw new InvalidOperationException("Failed to read process memory.");
             }
@@ -61,10 +73,12 @@ public sealed partial class MacProcessEx : ProcessExBase
 
     public override int WriteMemory(IntPtr address, byte[] data)
     {
+        EnsureTaskPortAvailable();
+
         GCHandle handle = GCHandle.Alloc(data, GCHandleType.Pinned);
         try
         {
-            if (vm_write(Handle, address, handle.AddrOfPinnedObject(), new IntPtr(data.Length)) != 0)
+            if (vm_write(taskPort, address, handle.AddrOfPinnedObject(), new UIntPtr((uint)data.Length)) != 0)
             {
                 throw new InvalidOperationException("Failed to write process memory.");
             }
@@ -84,7 +98,9 @@ public sealed partial class MacProcessEx : ProcessExBase
 
     public override void Suspend()
     {
-        if (task_suspend(Handle) != 0)
+        EnsureTaskPortAvailable();
+
+        if (task_suspend(taskPort) != 0)
         {
             throw new InvalidOperationException("Failed to suspend the process.");
         }
@@ -92,7 +108,9 @@ public sealed partial class MacProcessEx : ProcessExBase
 
     public override void Resume()
     {
-        if (task_resume(Handle) != 0)
+        EnsureTaskPortAvailable();
+
+        if (task_resume(taskPort) != 0)
         {
             throw new InvalidOperationException("Failed to resume the process.");
         }
@@ -100,7 +118,9 @@ public sealed partial class MacProcessEx : ProcessExBase
 
     public override void Terminate()
     {
-        if (task_terminate(Handle) != 0)
+        EnsureTaskPortAvailable();
+
+        if (task_terminate(taskPort) != 0)
         {
             throw new InvalidOperationException("Failed to terminate the process.");
         }
@@ -108,13 +128,85 @@ public sealed partial class MacProcessEx : ProcessExBase
 
     public override void Dispose()
     {
-        if (!disposed)
-        {
-            // In a real implementation, you'd release the task port here
-            base.Dispose();
-            disposed = true;
-        }
+        Dispose(disposing: true);
         GC.SuppressFinalize(this);
+    }
+
+    private void Dispose(bool disposing)
+    {
+        if (disposed)
+        {
+            return;
+        }
+
+        if (TryReleaseTaskPort() is false && disposing)
+        {
+            throw new InvalidOperationException("Failed to release the process task port.");
+        }
+
+        taskPort = IntPtr.Zero;
+        ownsTaskPort = false;
+
+        if (disposing)
+        {
+            base.Dispose();
+        }
+
+        disposed = true;
+    }
+
+    private void EnsureTaskPortAvailable()
+    {
+        if (disposed)
+        {
+            throw new ObjectDisposedException(nameof(MacProcessEx));
+        }
+
+        if (taskPort == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("Process task port is not available.");
+        }
+    }
+
+    private void InitializeTaskPort(int pid)
+    {
+        if (Process == null || pid < 1)
+        {
+            return;
+        }
+
+        IntPtr selfTask = task_self_trap();
+        if (selfTask == IntPtr.Zero)
+        {
+            throw new InvalidOperationException("Failed to acquire the current task port.");
+        }
+
+        if (pid == Environment.ProcessId)
+        {
+            taskPort = selfTask;
+            ownsTaskPort = false;
+            return;
+        }
+
+        int result = task_for_pid(selfTask, pid, out IntPtr targetTask);
+        if (result != 0)
+        {
+            throw new UnauthorizedAccessException($"Failed to acquire a task port for process {pid}. macOS may require additional privileges, disabled SIP, or the com.apple.security.cs.debugger entitlement. kern_return_t={result}.");
+        }
+
+        taskPort = targetTask;
+        ownsTaskPort = true;
+    }
+
+    private bool TryReleaseTaskPort()
+    {
+        if (!ownsTaskPort || taskPort == IntPtr.Zero)
+        {
+            return true;
+        }
+
+        IntPtr selfTask = task_self_trap();
+        return selfTask != IntPtr.Zero && mach_port_deallocate(selfTask, taskPort) == 0;
     }
 
     /// <summary>
@@ -140,10 +232,10 @@ public sealed partial class MacProcessEx : ProcessExBase
     /// <param name="outsize">Receives the number of bytes actually copied.</param>
 #if NET
     [LibraryImport("libSystem.dylib", EntryPoint = "vm_read_overwrite")]
-    private static partial int vm_read_overwrite(IntPtr targetTask, IntPtr address, IntPtr size, IntPtr data, out IntPtr outsize);
+    private static partial int vm_read_overwrite(IntPtr targetTask, IntPtr address, UIntPtr size, IntPtr data, out UIntPtr outsize);
 #else
     [DllImport("libSystem.dylib", EntryPoint = "vm_read_overwrite")]
-    private static extern int vm_read_overwrite(IntPtr targetTask, IntPtr address, IntPtr size, IntPtr data, out IntPtr outsize);
+    private static extern int vm_read_overwrite(IntPtr targetTask, IntPtr address, UIntPtr size, IntPtr data, out UIntPtr outsize);
 #endif
 
     /// <summary>
@@ -156,10 +248,10 @@ public sealed partial class MacProcessEx : ProcessExBase
     /// <param name="size">The number of bytes to write.</param>
 #if NET
     [LibraryImport("libSystem.dylib", EntryPoint = "vm_write")]
-    private static partial int vm_write(IntPtr targetTask, IntPtr address, IntPtr data, IntPtr size);
+    private static partial int vm_write(IntPtr targetTask, IntPtr address, IntPtr data, UIntPtr size);
 #else
     [DllImport("libSystem.dylib", EntryPoint = "vm_write")]
-    private static extern int vm_write(IntPtr targetTask, IntPtr address, IntPtr data, IntPtr size);
+    private static extern int vm_write(IntPtr targetTask, IntPtr address, IntPtr data, UIntPtr size);
 #endif
 
     /// <summary>
@@ -199,5 +291,46 @@ public sealed partial class MacProcessEx : ProcessExBase
 #else
     [DllImport("libSystem.dylib", EntryPoint = "task_terminate")]
     private static extern int task_terminate(IntPtr task);
+#endif
+
+    /// <summary>
+    /// Looks up the Mach task port for a process ID.
+    /// </summary>
+    /// <remarks>https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/mach_traps.h#L353</remarks>
+    /// <param name="targetTport">The current task port used to authorize the lookup.</param>
+    /// <param name="pid">The process ID whose task port should be returned.</param>
+    /// <param name="t">Receives the task port for the target process.</param>
+#if NET
+    [LibraryImport("libSystem.dylib", EntryPoint = "task_for_pid")]
+    private static partial int task_for_pid(IntPtr targetTport, int pid, out IntPtr t);
+#else
+    [DllImport("libSystem.dylib", EntryPoint = "task_for_pid")]
+    private static extern int task_for_pid(IntPtr targetTport, int pid, out IntPtr t);
+#endif
+
+    /// <summary>
+    /// Returns the current process's Mach task port.
+    /// </summary>
+    /// <remarks>https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/mach_traps.h#L321</remarks>
+#if NET
+    [LibraryImport("libSystem.dylib", EntryPoint = "task_self_trap")]
+    private static partial IntPtr task_self_trap();
+#else
+    [DllImport("libSystem.dylib", EntryPoint = "task_self_trap")]
+    private static extern IntPtr task_self_trap();
+#endif
+
+    /// <summary>
+    /// Releases a send right for a Mach port name from the current task's IPC space.
+    /// </summary>
+    /// <remarks>https://github.com/apple-oss-distributions/xnu/blob/main/osfmk/mach/mach_port.defs#L166</remarks>
+    /// <param name="task">The current task's IPC space.</param>
+    /// <param name="name">The Mach port name to release.</param>
+#if NET
+    [LibraryImport("libSystem.dylib", EntryPoint = "mach_port_deallocate")]
+    private static partial int mach_port_deallocate(IntPtr task, IntPtr name);
+#else
+    [DllImport("libSystem.dylib", EntryPoint = "mach_port_deallocate")]
+    private static extern int mach_port_deallocate(IntPtr task, IntPtr name);
 #endif
 }
