@@ -13,7 +13,7 @@ namespace Nitrox.Model.Platforms.OS.Windows;
 #if NET
 [System.Runtime.Versioning.SupportedOSPlatform("windows")]
 #endif
-public sealed class WindowsProcessEx : ProcessExBase
+public sealed partial class WindowsProcessEx : ProcessExBase
 {
     public override ProcessModuleEx? MainModule
     {
@@ -186,24 +186,97 @@ public sealed class WindowsProcessEx : ProcessExBase
 
     public override void Terminate() => Process?.Kill();
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    /// <summary>
+    /// Closes an open native object handle.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle</remarks>
+    /// <param name="hObject">The native handle to close.</param>
+#if NET
+    [LibraryImport("kernel32.dll", EntryPoint = "CloseHandle", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool CloseHandle(IntPtr hObject);
+#else
+    [DllImport("kernel32.dll", EntryPoint = "CloseHandle", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool CloseHandle(IntPtr hObject);
+#endif
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    /// <summary>
+    /// Reads a block of memory from another process into a caller-provided buffer.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-readprocessmemory</remarks>
+    /// <param name="hProcess">A handle to the process being read.</param>
+    /// <param name="lpBaseAddress">The address in the target process to read from.</param>
+    /// <param name="lpBuffer">The destination buffer that receives the copied bytes.</param>
+    /// <param name="dwSize">The number of bytes to read.</param>
+    /// <param name="lpNumberOfBytesRead">Receives the number of bytes actually read.</param>
+#if NET
+    [LibraryImport("kernel32.dll", EntryPoint = "ReadProcessMemory", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, int dwSize, out int lpNumberOfBytesRead);
+#else
+    [DllImport("kernel32.dll", EntryPoint = "ReadProcessMemory", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool ReadProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, [Out] byte[] lpBuffer, int dwSize, out int lpNumberOfBytesRead);
+#endif
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    /// <summary>
+    /// Writes a block of memory into another process at the specified address.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-writeprocessmemory</remarks>
+    /// <param name="hProcess">A handle to the process being written to.</param>
+    /// <param name="lpBaseAddress">The address in the target process to write to.</param>
+    /// <param name="lpBuffer">The source buffer containing the bytes to write.</param>
+    /// <param name="nSize">The number of bytes to write.</param>
+    /// <param name="lpNumberOfBytesWritten">Receives the number of bytes actually written.</param>
+#if NET
+    [LibraryImport("kernel32.dll", EntryPoint = "WriteProcessMemory", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int nSize, out int lpNumberOfBytesWritten);
+#else
+    [DllImport("kernel32.dll", EntryPoint = "WriteProcessMemory", SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static extern bool WriteProcessMemory(IntPtr hProcess, IntPtr lpBaseAddress, byte[] lpBuffer, int nSize, out int lpNumberOfBytesWritten);
+#endif
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    /// <summary>
+    /// Opens a thread handle with the requested access rights.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-openthread</remarks>
+    /// <param name="dwDesiredAccess">The requested access rights for the thread handle.</param>
+    /// <param name="bInheritHandle">Whether child processes can inherit the returned handle.</param>
+    /// <param name="dwThreadId">The operating system thread ID to open.</param>
+#if NET
+    [LibraryImport("kernel32.dll", EntryPoint = "OpenThread", SetLastError = true)]
+    private static partial IntPtr OpenThread(ThreadAccess dwDesiredAccess, [MarshalAs(UnmanagedType.Bool)] bool bInheritHandle, uint dwThreadId);
+#else
+    [DllImport("kernel32.dll", EntryPoint = "OpenThread", SetLastError = true)]
     private static extern IntPtr OpenThread(ThreadAccess dwDesiredAccess, bool bInheritHandle, uint dwThreadId);
+#endif
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    /// <summary>
+    /// Increments a thread's suspend count to stop it from running.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-suspendthread</remarks>
+    /// <param name="hThread">A handle to the thread to suspend.</param>
+#if NET
+    [LibraryImport("kernel32.dll", EntryPoint = "SuspendThread", SetLastError = true)]
+    private static partial uint SuspendThread(IntPtr hThread);
+#else
+    [DllImport("kernel32.dll", EntryPoint = "SuspendThread", SetLastError = true)]
     private static extern uint SuspendThread(IntPtr hThread);
+#endif
 
-    [DllImport("kernel32.dll", SetLastError = true)]
+    /// <summary>
+    /// Decrements a thread's suspend count and resumes it when the count reaches zero.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-resumethread</remarks>
+    /// <param name="hThread">A handle to the thread to resume.</param>
+#if NET
+    [LibraryImport("kernel32.dll", EntryPoint = "ResumeThread", SetLastError = true)]
+    private static partial int ResumeThread(IntPtr hThread);
+#else
+    [DllImport("kernel32.dll", EntryPoint = "ResumeThread", SetLastError = true)]
     private static extern int ResumeThread(IntPtr hThread);
+#endif
 }

@@ -1,10 +1,9 @@
 using System;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Nitrox.Model.Platforms.OS.Windows.Internal;
 
-internal static class Win32Native
+internal static partial class Win32Native
 {
     /// <summary>
     /// https://learn.microsoft.com/en-us/windows/win32/shell/assocf_str
@@ -81,20 +80,47 @@ internal static class Win32Native
             return null;
         }
 
-        StringBuilder sb = new((int)length);
-        ret = AssocQueryString(AssocF.None, str, extension, null, sb, ref length);
+        char[] buffer = new char[length];
+        ret = AssocQueryString(AssocF.None, str, extension, null, buffer, ref length);
         if (ret != S_OK)
         {
             return null;
         }
-        return sb.ToString();
+        return new string(buffer, 0, Math.Max(0, (int)length - 1));
     }
 
-    [DllImport("Shlwapi.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    private static extern uint AssocQueryString(AssocF flags, AssocStr str, string extension, string pszExtra, [Out] StringBuilder pszOut, ref uint pcchOut);
+    /// <summary>
+    /// Looks up an association string, such as the command or executable, for a file extension or protocol.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-assocquerystringa</remarks>
+    /// <param name="flags">Flags that control how the association lookup is performed.</param>
+    /// <param name="str">The kind of association string to retrieve.</param>
+    /// <param name="extension">The extension, protocol, CLSID, or ProgID to resolve.</param>
+    /// <param name="pszExtra">Optional extra data used by some association queries.</param>
+    /// <param name="pszOut">The output buffer that receives the resolved string.</param>
+    /// <param name="pcchOut">The size of <paramref name="pszOut" /> on input and the required or written length on output.</param>
+#if NET
+    [LibraryImport("Shlwapi.dll", EntryPoint = "AssocQueryString", SetLastError = true, StringMarshalling = StringMarshalling.Utf16)]
+    private static partial uint AssocQueryString(AssocF flags, AssocStr str, string extension, string? pszExtra, [Out] char[]? pszOut, ref uint pcchOut);
+#else
+    [DllImport("Shlwapi.dll", EntryPoint = "AssocQueryString", SetLastError = true, CharSet = CharSet.Auto)]
+    private static extern uint AssocQueryString(AssocF flags, AssocStr str, string extension, string? pszExtra, [Out] char[]? pszOut, ref uint pcchOut);
+#endif
 
-    [DllImport("Wintrust.dll", PreserveSig = true, SetLastError = false)]
+    /// <summary>
+    /// Verifies the trust status of a file or other subject through the Windows trust providers.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/wintrust/nf-wintrust-winverifytrust</remarks>
+    /// <param name="hWnd">An optional owner window handle for any trust UI.</param>
+    /// <param name="pgActionID">A pointer to the trust action GUID to execute.</param>
+    /// <param name="pWinTrustData">A pointer to the WinTrust input structure.</param>
+#if NET
+    [LibraryImport("Wintrust.dll", EntryPoint = "WinVerifyTrust", SetLastError = false)]
+    private static partial uint WinVerifyTrust(IntPtr hWnd, IntPtr pgActionID, IntPtr pWinTrustData);
+#else
+    [DllImport("Wintrust.dll", EntryPoint = "WinVerifyTrust", PreserveSig = true, SetLastError = false)]
     private static extern uint WinVerifyTrust(IntPtr hWnd, IntPtr pgActionID, IntPtr pWinTrustData);
+#endif
 
     public static bool IsTrusted(string fileName)
     {
@@ -231,11 +257,35 @@ internal static class Win32Native
         Install
     }
 
+    /// <summary>
+    /// Updates a 32-bit window attribute at the specified offset.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlonga</remarks>
+    /// <param name="hWnd">The window handle whose attribute is being updated.</param>
+    /// <param name="nIndex">The zero-based offset or predefined window field to set.</param>
+    /// <param name="dwNewLong">The new 32-bit value to store.</param>
+#if NET
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLong")]
+    internal static partial int SetWindowLong32(IntPtr hWnd, int nIndex, int dwNewLong);
+#else
     [DllImport("user32.dll", EntryPoint = "SetWindowLong")]
-    internal static extern int SetWindowLong32(HandleRef hWnd, int nIndex, int dwNewLong);
+    internal static extern int SetWindowLong32(IntPtr hWnd, int nIndex, int dwNewLong);
+#endif
 
+    /// <summary>
+    /// Updates a pointer-sized window attribute at the specified offset.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowlongptra</remarks>
+    /// <param name="hWnd">The window handle whose attribute is being updated.</param>
+    /// <param name="nIndex">The zero-based offset or predefined window field to set.</param>
+    /// <param name="dwNewLong">The new pointer-sized value to store.</param>
+#if NET
+    [LibraryImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
+    internal static partial IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, long dwNewLong);
+#else
     [DllImport("user32.dll", EntryPoint = "SetWindowLongPtr")]
-    internal static extern IntPtr SetWindowLongPtr64(HandleRef hWnd, int nIndex, long dwNewLong);
+    internal static extern IntPtr SetWindowLongPtr64(IntPtr hWnd, int nIndex, long dwNewLong);
+#endif
 
     [Flags]
     public enum WS : long

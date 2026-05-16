@@ -14,7 +14,7 @@ namespace Nitrox.Model.Platforms.OS.Unix;
 #if NET
 [System.Runtime.Versioning.SupportedOSPlatform("linux")]
 #endif
-public sealed class UnixProcessEx : ProcessExBase
+public sealed partial class UnixProcessEx : ProcessExBase
 {
     private readonly int pid;
 
@@ -215,17 +215,62 @@ public sealed class UnixProcessEx : ProcessExBase
         }
     }
 
-    [DllImport("libc", SetLastError = true)]
+    /// <summary>
+    /// Returns the effective user ID of the current process.
+    /// </summary>
+    /// <remarks>https://man7.org/linux/man-pages/man2/geteuid.2.html</remarks>
+#if NET
+    [LibraryImport("libc", EntryPoint = "geteuid", SetLastError = true)]
+    private static partial uint geteuid();
+#else
+    [DllImport("libc", EntryPoint = "geteuid", SetLastError = true)]
     private static extern uint geteuid();
+#endif
 
-    [DllImport("libc", SetLastError = true)]
+    /// <summary>
+    /// Performs tracing operations against another process, such as attach and memory access.
+    /// </summary>
+    /// <remarks>https://man7.org/linux/man-pages/man2/ptrace.2.html</remarks>
+    /// <param name="request">The ptrace operation to perform.</param>
+    /// <param name="pid">The process ID of the tracee.</param>
+    /// <param name="addr">An operation-specific address argument.</param>
+    /// <param name="data">An operation-specific data argument.</param>
+#if NET
+    [LibraryImport("libc", EntryPoint = "ptrace", SetLastError = true)]
+    private static partial int ptrace(PtraceRequest request, int pid, IntPtr addr, IntPtr data);
+#else
+    [DllImport("libc", EntryPoint = "ptrace", SetLastError = true)]
     private static extern int ptrace(PtraceRequest request, int pid, IntPtr addr, IntPtr data);
+#endif
 
-    [DllImport("libc", SetLastError = true)]
+    /// <summary>
+    /// Sends a signal to a process.
+    /// </summary>
+    /// <remarks>https://man7.org/linux/man-pages/man2/kill.2.html</remarks>
+    /// <param name="pid">The target process ID.</param>
+    /// <param name="sig">The signal number to send.</param>
+#if NET
+    [LibraryImport("libc", EntryPoint = "kill", SetLastError = true)]
+    private static partial int kill(int pid, int sig);
+#else
+    [DllImport("libc", EntryPoint = "kill", SetLastError = true)]
     private static extern int kill(int pid, int sig);
+#endif
 
-    [DllImport("libc", SetLastError = true)]
+    /// <summary>
+    /// Reads the target path stored in a symbolic link.
+    /// </summary>
+    /// <remarks>https://man7.org/linux/man-pages/man2/readlink.2.html</remarks>
+    /// <param name="path">The symbolic link path to inspect.</param>
+    /// <param name="buf">The buffer that receives the link target bytes.</param>
+    /// <param name="bufsiz">The size of <paramref name="buf" /> in bytes.</param>
+#if NET
+    [LibraryImport("libc", EntryPoint = "readlink", SetLastError = true, StringMarshalling = StringMarshalling.Utf8)]
+    private static partial int readlink(string path, byte[] buf, int bufsiz);
+#else
+    [DllImport("libc", EntryPoint = "readlink", SetLastError = true)]
     private static extern int readlink(string path, byte[] buf, int bufsiz);
+#endif
 
     private static string ReadSymbolicLink(string path)
     {

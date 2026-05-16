@@ -26,14 +26,13 @@ public static partial class WindowsApi
             dwNewLong |= WS.WS_SIZEBOX;
         }
 
-        HandleRef handle = new(null, windowHandle);
         switch (IntPtr.Size)
         {
             case 8:
-                SetWindowLongPtr64(handle, -16, (long)dwNewLong);
+                SetWindowLongPtr64(windowHandle, -16, (long)dwNewLong);
                 break;
             default:
-                SetWindowLong32(handle, -16, (int)dwNewLong);
+                SetWindowLong32(windowHandle, -16, (int)dwNewLong);
                 break;
         }
     }
@@ -53,26 +52,46 @@ public static partial class WindowsApi
         SetForegroundWindow(windowHandle);
     }
 
+    /// <summary>
+    /// Brings the specified window to the foreground and activates it.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow</remarks>
+    /// <param name="handle">The window handle to activate.</param>
 #if NET
-    [LibraryImport("User32.dll")]
+    [LibraryImport("User32.dll", EntryPoint = "SetForegroundWindow")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool SetForegroundWindow(IntPtr handle);
+#else
+    [DllImport("User32.dll", EntryPoint = "SetForegroundWindow")]
+    private static extern bool SetForegroundWindow(IntPtr handle);
+#endif
 
-    [LibraryImport("User32.dll")]
+    /// <summary>
+    /// Changes how the specified window is shown, hidden, minimized, or restored.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-showwindow</remarks>
+    /// <param name="handle">The window handle whose show state is being changed.</param>
+    /// <param name="nCmdShow">The show command that controls the new window state.</param>
+#if NET
+    [LibraryImport("User32.dll", EntryPoint = "ShowWindow")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool ShowWindow(IntPtr handle, int nCmdShow);
+#else
+    [DllImport("User32.dll", EntryPoint = "ShowWindow")]
+    private static extern bool ShowWindow(IntPtr handle, int nCmdShow);
+#endif
 
-    [LibraryImport("User32.dll")]
+    /// <summary>
+    /// Checks whether the specified window is minimized.
+    /// </summary>
+    /// <remarks>https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-isiconic</remarks>
+    /// <param name="handle">The window handle to test.</param>
+#if NET
+    [LibraryImport("User32.dll", EntryPoint = "IsIconic")]
     [return: MarshalAs(UnmanagedType.Bool)]
     private static partial bool IsIconic(IntPtr handle);
 #else
-    [DllImport("User32.dll")]
-    private static extern bool SetForegroundWindow(IntPtr handle);
-
-    [DllImport("User32.dll")]
-    private static extern bool ShowWindow(IntPtr handle, int nCmdShow);
-
-    [DllImport("User32.dll")]
+    [DllImport("User32.dll", EntryPoint = "IsIconic")]
     private static extern bool IsIconic(IntPtr handle);
 #endif
 }
