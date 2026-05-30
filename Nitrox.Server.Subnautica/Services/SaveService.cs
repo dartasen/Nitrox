@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Nitrox.Model.Constants;
@@ -30,38 +29,8 @@ internal sealed class SaveService(Func<WorldService> worldServiceProvider, ISave
                     return;
                 }
                 await saveStateTrigger.InvokeAsync(new ISaveState.Args(savePath));
-                ExecutePostSaveCommand();
                 BackUp(savePath);
                 break;
-        }
-    }
-
-    private void ExecutePostSaveCommand()
-    {
-        string postSaveCommandPath = options.Value.PostSaveCommandPath;
-        if (!string.IsNullOrWhiteSpace(postSaveCommandPath))
-        {
-            try
-            {
-                // Call external tool for backups, etc
-                if (File.Exists(postSaveCommandPath))
-                {
-                    using Process process = Process.Start(new ProcessStartInfo
-                    {
-                        FileName = postSaveCommandPath,
-                        Verb = "open"
-                    });
-                    logger.ZLogInformation($"Post-save command completed successfully: {postSaveCommandPath}");
-                }
-                else
-                {
-                    logger.ZLogError($"Post-save file does not exist: {postSaveCommandPath}");
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.ZLogError(ex, $"Post-save command failed");
-            }
         }
     }
 

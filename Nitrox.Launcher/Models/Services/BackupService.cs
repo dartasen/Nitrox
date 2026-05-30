@@ -10,6 +10,7 @@ using Nitrox.Model.Constants;
 using Nitrox.Model.Core;
 using Nitrox.Model.Helper;
 using Nitrox.Model.Logger;
+using Nitrox.Launcher.Models.Utils;
 
 namespace Nitrox.Launcher.Models.Services;
 
@@ -240,6 +241,8 @@ public class BackupService(IKeyValueStore keyValueStore)
 
             if (OperatingSystem.IsWindows())
             {
+                string psBackupPath = ScriptHelper.EscapeForPowerShell(backupPath);
+                string psExtractPath = ScriptHelper.EscapeForPowerShell(extractPath);
                 scriptPath = Path.Combine(tempDir, "restore.bat");
                 scriptContent = $"""
                                  @echo off
@@ -251,7 +254,7 @@ public class BackupService(IKeyValueStore keyValueStore)
                                      goto waitloop
                                  )
                                  echo Extracting backup...
-                                 powershell -Command "Expand-Archive -Path '{backupPath}' -DestinationPath '{extractPath}' -Force"
+                                 powershell -Command "Expand-Archive -Path '{psBackupPath}' -DestinationPath '{psExtractPath}' -Force"
                                  if errorlevel 1 (
                                      echo Failed to extract backup! Press any key to exit...
                                      pause >nul
@@ -282,6 +285,11 @@ public class BackupService(IKeyValueStore keyValueStore)
             }
             else
             {
+                string shBackupPath = ScriptHelper.EscapeForBash(backupPath);
+                string shExtractPath = ScriptHelper.EscapeForBash(extractPath);
+                string shLauncherPath = ScriptHelper.EscapeForBash(launcherPath);
+                string shLauncherFilePath = ScriptHelper.EscapeForBash(launcherFilePath);
+                string shSavesDir = ScriptHelper.EscapeForBash(savesDir);
                 scriptPath = Path.Combine(tempDir, "restore.sh");
                 scriptContent = $"""
                                  #!/bin/bash
@@ -290,32 +298,32 @@ public class BackupService(IKeyValueStore keyValueStore)
                                      sleep 1
                                  done
                                  echo "Extracting backup..."
-                                 unzip -o "{backupPath}" -d "{extractPath}"
+                                 unzip -o "{shBackupPath}" -d "{shExtractPath}"
                                  if [ $? -ne 0 ]; then
                                      echo "Failed to extract backup!"
                                      exit 1
                                  fi
                                  echo "Restoring installation files..."
-                                 if [ -d "{extractPath}/installation" ]; then
-                                     rm -f "{launcherPath}"/*.dll 2>/dev/null
-                                     rm -f "{launcherPath}"/*.exe 2>/dev/null
-                                     rm -f "{launcherPath}"/*.json 2>/dev/null
-                                     rm -f "{launcherPath}"/*.config 2>/dev/null
-                                     rm -f "{launcherPath}"/*.txt 2>/dev/null
-                                     rm -rf "{launcherPath}/lib" 2>/dev/null
-                                     rm -rf "{launcherPath}/runtimes" 2>/dev/null
-                                     rm -rf "{launcherPath}/Resources" 2>/dev/null
-                                     cp -rf "{extractPath}/installation/"* "{launcherPath}/"
+                                 if [ -d "{shExtractPath}/installation" ]; then
+                                     rm -f "{shLauncherPath}"/*.dll 2>/dev/null
+                                     rm -f "{shLauncherPath}"/*.exe 2>/dev/null
+                                     rm -f "{shLauncherPath}"/*.json 2>/dev/null
+                                     rm -f "{shLauncherPath}"/*.config 2>/dev/null
+                                     rm -f "{shLauncherPath}"/*.txt 2>/dev/null
+                                     rm -rf "{shLauncherPath}/lib" 2>/dev/null
+                                     rm -rf "{shLauncherPath}/runtimes" 2>/dev/null
+                                     rm -rf "{shLauncherPath}/Resources" 2>/dev/null
+                                     cp -rf "{shExtractPath}/installation/"* "{shLauncherPath}/"
                                  fi
                                  echo "Restoring save files..."
-                                 if [ -d "{extractPath}/saves" ]; then
-                                     cp -rf "{extractPath}/saves/"* "{savesDir}/"
+                                 if [ -d "{shExtractPath}/saves" ]; then
+                                     cp -rf "{shExtractPath}/saves/"* "{shSavesDir}/"
                                  fi
                                  echo "Cleaning up..."
-                                 rm -rf "{extractPath}" 2>/dev/null
+                                 rm -rf "{shExtractPath}" 2>/dev/null
                                  echo "Restore complete! Starting Nitrox Launcher..."
-                                 chmod +x "{launcherFilePath}"
-                                 nohup "{launcherFilePath}" >/dev/null 2>&1 &
+                                 chmod +x "{shLauncherFilePath}"
+                                 nohup "{shLauncherFilePath}" >/dev/null 2>&1 &
                                  """;
             }
 

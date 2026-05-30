@@ -82,9 +82,6 @@ public sealed partial class SubnauticaServerOptions
     [PropertyDescription("When true, will reject any build actions detected as desynced")]
     public bool SafeBuilding { get; set; } = true;
 
-    [PropertyDescription("Command to run following a successful world save (e.g. .exe, .bat, or PowerShell script). ")]
-    public string PostSaveCommandPath { get; set; } = "";
-
     [OptionsValidator]
     public partial class Validator : IValidateOptions<SubnauticaServerOptions>;
 }

@@ -11,6 +11,7 @@ using Nitrox.Server.Subnautica.Models.GameLogic.Entities;
 using Nitrox.Server.Subnautica.Models.Helper;
 using Nitrox.Server.Subnautica.Models.Resources.AddressablesTools.Catalog;
 using Nitrox.Server.Subnautica.Models.Resources.Core;
+using Nitrox.Server.Subnautica.Models.Serialization.Json;
 using ClassIdByRuntimeKeyDictionary = System.Collections.Generic.Dictionary<string, string>;
 using AddressableCatalogDictionary = System.Collections.Generic.Dictionary<string, string[]>;
 
@@ -35,7 +36,7 @@ internal sealed class PrefabPlaceholderGroupsResource(SubnauticaAssetsManager as
     private readonly ILogger<PrefabPlaceholderGroupsResource> logger = logger;
     private readonly IOptions<ServerStartOptions> options = options;
     private readonly TaskCompletionSource resourceLoadFinished = new();
-    private readonly JsonSerializer serializer = new() { TypeNameHandling = TypeNameHandling.Auto };
+    private readonly JsonSerializer serializer = new() { TypeNameHandling = TypeNameHandling.Auto, SerializationBinder = new NitroxSerializationBinder() };
     private ConcurrentDictionary<string, PrefabPlaceholdersGroupAsset> groupsByClassId = [];
     private ConcurrentDictionary<string, PrefabPlaceholderAsset> placeholdersByClassId = [];
     private ConcurrentDictionary<string, string[]> randomPossibilitiesByClassId = [];

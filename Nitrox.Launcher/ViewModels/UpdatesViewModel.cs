@@ -154,6 +154,9 @@ internal partial class UpdatesViewModel(NitroxWebsiteApiService nitroxWebsiteApi
         }
         else
         {
+            string shSourcePath = ScriptHelper.EscapeForBash(sourcePath);
+            string shDestinationPath = ScriptHelper.EscapeForBash(destinationPath);
+            string shLauncherFilePath = ScriptHelper.EscapeForBash(launcherFilePath);
             scriptPath = Path.Combine(tempDir, "update.sh");
             scriptContent = $"""
                              #!/bin/bash
@@ -162,19 +165,19 @@ internal partial class UpdatesViewModel(NitroxWebsiteApiService nitroxWebsiteApi
                                  sleep 1
                              done
                              echo "Cleaning old installation..."
-                             rm -f "{destinationPath}"/*.dll 2>/dev/null
-                             rm -f "{destinationPath}"/*.exe 2>/dev/null
-                             rm -f "{destinationPath}"/*.json 2>/dev/null
-                             rm -f "{destinationPath}"/*.config 2>/dev/null
-                             rm -f "{destinationPath}"/*.txt 2>/dev/null
-                             rm -rf "{destinationPath}/lib" 2>/dev/null
-                             rm -rf "{destinationPath}/runtimes" 2>/dev/null
-                             rm -rf "{destinationPath}/Resources" 2>/dev/null
+                             rm -f "{shDestinationPath}"/*.dll 2>/dev/null
+                             rm -f "{shDestinationPath}"/*.exe 2>/dev/null
+                             rm -f "{shDestinationPath}"/*.json 2>/dev/null
+                             rm -f "{shDestinationPath}"/*.config 2>/dev/null
+                             rm -f "{shDestinationPath}"/*.txt 2>/dev/null
+                             rm -rf "{shDestinationPath}/lib" 2>/dev/null
+                             rm -rf "{shDestinationPath}/runtimes" 2>/dev/null
+                             rm -rf "{shDestinationPath}/Resources" 2>/dev/null
                              echo "Installing update..."
-                             cp -rf "{sourcePath}/"* "{destinationPath}/"
+                             cp -rf "{shSourcePath}/"* "{shDestinationPath}/"
                              echo "Starting Nitrox Launcher..."
-                             chmod +x "{launcherFilePath}"
-                             nohup "{launcherFilePath}" >/dev/null 2>&1 &
+                             chmod +x "{shLauncherFilePath}"
+                             nohup "{shLauncherFilePath}" >/dev/null 2>&1 &
                              """;
         }
 

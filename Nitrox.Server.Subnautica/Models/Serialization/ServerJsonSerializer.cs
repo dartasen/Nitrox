@@ -22,6 +22,7 @@ public sealed class ServerJsonSerializer : IServerSerializer
         };
 
         serializer.TypeNameHandling = TypeNameHandling.Auto;
+        serializer.SerializationBinder = new NitroxSerializationBinder();
         serializer.ContractResolver = new AttributeContractResolver();
         serializer.Converters.Add(new NitroxIdConverter());
         serializer.Converters.Add(new PeerIdConverter());
