@@ -32,24 +32,53 @@ internal sealed class JoiningManager(
     ILogger<JoiningManager> logger)
     : ISessionCleaner
 {
-    private readonly IPacketSender packetSender = packetSender;
-    private readonly PlayerManager playerManager = playerManager;
-    private readonly SessionManager sessionManager = sessionManager;
-    private readonly WorldEntityManager worldEntityManager = worldEntityManager;
-    private readonly PdaManager pdaManager = pdaManager;
-    private readonly StoryManager storyManager = storyManager;
-    private readonly StoryScheduler storyScheduler = storyScheduler;
-    private readonly EntitySimulation entitySimulation = entitySimulation;
-    private readonly IOptions<SubnauticaServerOptions> options = options;
-    private readonly ILogger<JoiningManager> logger = logger;
-    private readonly EscapePodManager escapePodManager = escapePodManager;
     private readonly EntityRegistry entityRegistry = entityRegistry;
-    private readonly SessionSettings sessionSettings = sessionSettings;
+    private readonly EntitySimulation entitySimulation = entitySimulation;
+    private readonly EscapePodManager escapePodManager = escapePodManager;
 
     private readonly ThreadSafeQueue<(SessionId, string)> joinQueue = new();
+    private readonly ILogger<JoiningManager> logger = logger;
+    private readonly IOptions<SubnauticaServerOptions> options = options;
+    private readonly IPacketSender packetSender = packetSender;
+    private readonly PdaManager pdaManager = pdaManager;
+    private readonly PlayerManager playerManager = playerManager;
     private readonly Lock queueLocker = new(); // Necessary to avoid race conditions between JoinQueueLoop and AddToJoinQueue
+    private readonly SessionManager sessionManager = sessionManager;
+    private readonly SessionSettings sessionSettings = sessionSettings;
+    private readonly StoryManager storyManager = storyManager;
+    private readonly StoryScheduler storyScheduler = storyScheduler;
+    private readonly WorldEntityManager worldEntityManager = worldEntityManager;
     private bool queueActive;
     public Action? SyncFinishedCallback { get; private set; }
+
+    public void AddToJoinQueue(SessionId sessionId, string reservationKey)
+    {
+        // Necessary to avoid race conditions between JoinQueueLoop and AddToJoinQueue
+        lock (queueLocker)
+        {
+            logger.ZLogInformation($"Added player {playerManager.GetPlayerContext(reservationKey)?.PlayerName} to queue");
+            joinQueue.Enqueue((sessionId, reservationKey));
+
+            if (queueActive)
+            {
+                packetSender.SendPacketAsync(new JoinQueueInfo(joinQueue.Count, options.Value.InitialSyncTimeout), sessionId);
+            }
+            else
+            {
+                // It may be possible to use the task's status itself for this,
+                // but the ContinueWithHandleError callback might cause issues
+                queueActive = true;
+                Task.Run(JoinQueueLoop).ContinueWithHandleError();
+            }
+        }
+    }
+
+    public Task OnEventAsync(ISessionCleaner.Args args)
+    {
+        // They may have been queued, so just erase their entry
+        joinQueue.RemoveWhere(tuple => Equals(tuple.Item1, args.Session.Id));
+        return Task.CompletedTask;
+    }
 
     private async Task JoinQueueLoop()
     {
@@ -125,28 +154,6 @@ internal sealed class JoiningManager(
         }
     }
 
-    public void AddToJoinQueue(SessionId sessionId, string reservationKey)
-    {
-        // Necessary to avoid race conditions between JoinQueueLoop and AddToJoinQueue
-        lock (queueLocker)
-        {
-            logger.ZLogInformation($"Added player {playerManager.GetPlayerContext(reservationKey)?.PlayerName} to queue");
-            joinQueue.Enqueue((sessionId, reservationKey));
-
-            if (queueActive)
-            {
-                packetSender.SendPacketAsync(new JoinQueueInfo(joinQueue.Count, options.Value.InitialSyncTimeout), sessionId);
-            }
-            else
-            {
-                // It may be possible to use the task's status itself for this,
-                // but the ContinueWithHandleError callback might cause issues
-                queueActive = true;
-                Task.Run(JoinQueueLoop).ContinueWithHandleError();
-            }
-        }
-    }
-
     private async Task SendInitialSyncAsync(SessionId sessionId, string reservationKey)
     {
         Player player = playerManager.CreatePlayerData(sessionId, reservationKey, out bool wasBrandNewPlayer);
@@ -181,7 +188,8 @@ internal sealed class JoiningManager(
         List<GlobalRootEntity> globalRootEntities = worldEntityManager.GetGlobalRootEntities(true);
         bool isFirstPlayer = playerManager.GetConnectedPlayers().Count == 1;
 
-        InitialPlayerSync initialPlayerSync = new(player.GameObjectId,
+        InitialPlayerSync initialPlayerSync = new(
+            player.GameObjectId,
             wasBrandNewPlayer,
             assignedEscapePodId,
             player.EquippedItems,
@@ -221,7 +229,7 @@ internal sealed class JoiningManager(
         {
             NitroxTransform transform = new(player.Position, player.Rotation, NitroxVector3.One);
 
-            PlayerEntity playerEntity = new(transform, 0, null, false, player.GameObjectId, NitroxTechType.None, null, null, new List<Entity>());
+            PlayerEntity playerEntity = new(transform, 0, null, false, player.GameObjectId, NitroxTechType.None, null, player.SubRootId.OrNull(), new List<Entity>());
             entityRegistry.AddOrUpdate(playerEntity);
             worldEntityManager.TrackEntityInTheWorld(playerEntity);
             return playerEntity;
@@ -242,12 +250,5 @@ internal sealed class JoiningManager(
     {
         PlayerJoinedMultiplayerSession playerJoinedPacket = new(player.PlayerContext, player.SubRootId, player.Entity);
         packetSender.SendPacketToOthersAsync(playerJoinedPacket, player.SessionId);
-    }
-
-    public Task OnEventAsync(ISessionCleaner.Args args)
-    {
-        // They may have been queued, so just erase their entry
-        joinQueue.RemoveWhere(tuple => Equals(tuple.Item1, args.Session.Id));
-        return Task.CompletedTask;
     }
 }
