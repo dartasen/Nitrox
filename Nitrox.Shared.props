@@ -15,13 +15,17 @@
          
         <!-- Current RID build configuration -->
         <_IsWindowsTarget>false</_IsWindowsTarget>
-        <_IsWindowsTarget Condition="'$(RuntimeIdentifier)' == 'win-x64'">true</_IsWindowsTarget>
+        <_IsWindowsTarget Condition="'$(RuntimeIdentifier)' == 'win-x64' Or '$(RuntimeIdentifier)' == 'win-arm64'">true</_IsWindowsTarget>
 
         <_IsLinuxTarget>false</_IsLinuxTarget>
         <_IsLinuxTarget Condition="'$(RuntimeIdentifier)' == 'linux-x64' Or '$(RuntimeIdentifier)' == 'linux-arm64'">true</_IsLinuxTarget>
 
         <_IsMacOSTarget>false</_IsMacOSTarget>
         <_IsMacOSTarget Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">true</_IsMacOSTarget>
+        
+        <!-- Current build environment -->
+        <_IsCI>false</_IsCI>
+        <_IsCI Condition="'$(GITHUB_ACTIONS)' == 'true' Or '$(CI)' == 'true'">true</_IsCI>
     </PropertyGroup>
 
     <!-- Git info properties -->
@@ -34,4 +38,26 @@
         <_GitRefHashFilePath Condition="$([System.Text.RegularExpressions.Regex]::IsMatch('$(_GitRefHashFilePath)', '^[0-9a-fA-F]+$'))">$(_GitRefFilePath)</_GitRefHashFilePath>
         <_GitHash Condition="Exists('$(_GitRefHashFilePath)')">$([System.IO.File]::ReadAllText('$(_GitRefHashFilePath)').Trim())</_GitHash>
     </PropertyGroup>
+
+    <!-- Game properties -->
+    <PropertyGroup>
+        <GameName Condition="'$(GameName)' == ''">$(NITROX_GAME_NAME)</GameName>
+        <GameName Condition="'$(GameName)' == ''">Subnautica</GameName>
+        <GameMinimumVersion Condition="'$(GameMinimumVersion)' == ''">$(NITROX_GAME_MINIMUM_VERSION)</GameMinimumVersion>
+        <GameMinimumVersion Condition="'$(GameMinimumVersion)' == ''">82304</GameMinimumVersion>
+        <!-- Root installation path of the game (usually where the executable is located) -->
+        <GameInstallationPath Condition="'$(GameInstallationPath)' == ''">$(SUBNAUTICA_INSTALLATION_PATH)</GameInstallationPath>
+        <GameInstallationPath Condition="'$(GameInstallationPath)' == ''">$(NITROX_GAME_INSTALLATION_PATH)</GameInstallationPath>
+        <!-- Name of the folder that contains the game data (assets, configs, ...) -->
+        <GameDataFolder Condition="'$(GameDataFolder)' == ''">$(NITROX_GAME_DATA_FOLDER)</GameDataFolder>
+        <GameDataFolder Condition="'$(GameDataFolder)' == '' and '$(_IsMacOS)' == 'true'">Resources/Data</GameDataFolder>
+        <GameDataFolder Condition="'$(GameDataFolder)' == ''">Subnautica_Data</GameDataFolder>
+        <!-- Name of the folder that contains the managed game assemblies -->
+        <GameManagedFolder Condition="'$(GameManagedFolder)' == ''">$(NITROX_GAME_MANAGED_FOLDER)</GameManagedFolder>
+        <GameManagedFolder Condition="'$(GameManagedFolder)' == ''">Managed</GameManagedFolder>
+        <!-- Relative path to the game version file -->
+        <GameVersionRelativePath Condition="'$(GameVersionRelativePath)' == ''">$(NITROX_GAME_VERSION_RELATIVE_PATH)</GameVersionRelativePath>
+        <GameVersionRelativePath Condition="'$(GameVersionRelativePath)' == ''">StreamingAssets/SNUnmanagedData/plastic_status.ignore</GameVersionRelativePath>
+    </PropertyGroup>
+
 </Project>

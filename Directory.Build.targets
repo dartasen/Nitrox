@@ -46,27 +46,47 @@
     </Target>
 
     <Target Name="FindGameAndIncludeReferences" BeforeTargets="ResolveAssemblyReferences" Condition="'$(_NitroxDiscovery_TaskAssembly)' != '' and ('$(UnityModLibrary)' == 'true' or '$(TestLibrary)' == 'true')">
-        <DiscoverGame GameName="$(GameName)" IntermediateOutputPath="$(IntermediateOutputPath)">
-            <Output TaskParameter="GamePath" PropertyName="GameDir" />
+
+        <Message Importance="High"
+                 Text="Running FindGameAndIncludeReferences on $(MSBuildProjectName)" />
+        
+        <PropertyGroup>
+            <_DiscoveredGameDir></_DiscoveredGameDir>
+        </PropertyGroup>
+        
+        <!-- Don't need to discover game inside CI, it will access our surfaced APIs -->
+        <DiscoverGame Condition="'$(_IsCI)' == 'false'"
+                      GameName="$(GameName)"
+                      IntermediateOutputPath="$(IntermediateOutputPath)">
+            <Output TaskParameter="GamePath"
+                    PropertyName="GameDir" />
         </DiscoverGame>
-        <Error Condition="'$(GameDir)' == '' and '$(SUBNAUTICA_INSTALLATION_PATH)' == ''" Text="Failed to find the game '$(GameName)' on your machine" />
+
+        <Error Condition="'$(GameDir)' == '' and '$(GameInstallationPath)' == ''"
+               Text="Failed to find the game '$(GameName)' on your machine. Either provide a valid game installation or set NITROX_GAME_INSTALLATION_PATH" />
+        
         <PropertyGroup>
-            <GameDir Condition="Exists('$(GameDir)')">$(GameDir)\</GameDir>
-            <GameDir Condition="!Exists('$(GameDir)')">$(SUBNAUTICA_INSTALLATION_PATH)\</GameDir>
-            <GameDataFolder>Subnautica_Data</GameDataFolder>
+            <GameDir Condition="Exists('$(GameDir)')">$(GameDir)/</GameDir>
+            <GameDir Condition="!Exists('$(GameDir)')">$(GameInstallationPath)/</GameDir>            
+            <GameManagedDir>$(GameDir)$(GameDataFolder)/$(GameManagedFolder)/</GameManagedDir>
+            <GameVersionFile>$(GameDir)$(GameDataFolder)/$(GameVersionRelativePath)</GameVersionFile>
         </PropertyGroup>
-        <PropertyGroup Condition="$(_IsMacOS)">
-            <GameDataFolder>Resources\Data</GameDataFolder>
-        </PropertyGroup>
-        <PropertyGroup>
-            <GameManagedDir>$(GameDir)$(GameDataFolder)\Managed\</GameManagedDir>
-            <GameVersionFile>$(GameDir)$(GameDataFolder)\StreamingAssets\SNUnmanagedData\plastic_status.ignore</GameVersionFile>
-        </PropertyGroup>
+        
+        <Error Condition="!Exists('$(GameManagedDir)')"
+               Text="Failed to find '$(GameName)' managed folder, make sure it exists : '$(GameManagedDir)'." />
+        <Error Condition="!Exists('$(GameVersionFile)')"
+               Text="Failed to find '$(GameName)' version file, make sure it exists : '$(GameVersionFile)'." />
+
         <ReadLinesFromFile File="$(GameVersionFile)">
-            <Output TaskParameter="Lines" ItemName="GameVersion" />
+            <Output TaskParameter="Lines"
+                    ItemName="GameVersion" />
         </ReadLinesFromFile>
-        <Error Condition="@(GameVersion) &lt; $(GameMinimumVersion)" Text="$(GameName) version is outdated. Expected version &gt;=$(GameMinimumVersion) but was @(GameVersion)" />
-        <Message Importance="high" Text="Game found at: '$(GameDir)' with version @(GameVersion)" />
+
+        <Error Condition="@(GameVersion) &lt; $(GameMinimumVersion)"
+               Text="$(GameName) version is outdated. Expected version &gt;=$(GameMinimumVersion) but was @(GameVersion)" />
+        
+        <Message Importance="High"
+                 Text="Game found at: '$(GameDir)' with version @(GameVersion)" />
 
         <ItemGroup>
             <!-- Subnautica DLLs to include -->

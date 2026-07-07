@@ -4,25 +4,50 @@ on:
 
 jobs:
   test:
-    if: github.repository_owner == 'SubnauticaNitrox'
-    runs-on: [self-hosted, linux]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      NITROX_GAME_INSTALLATION_PATH: ${{ github.workspace }}/external/SubnauticaApiSurface/output
+      NITROX_GAME_MANAGED_FOLDER: '.'
+      NITROX_GAME_DATA_FOLDER: '.'
+      NITROX_GAME_VERSION_RELATIVE_PATH: 'version.txt'
     steps:
-    - name: Checking out repository
+    - name: Checkout repository
       uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
 
-    - name: Run Tests
-      run: dotnet test Nitrox.Test/Nitrox.Test.csproj --logger trx --results-directory "test_results"
+    - name: Checkout SubnauticaApiSurface
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      with:
+        repository: SubnauticaNitrox/SubnauticaApiSurface
+        token: ${{ secrets.SNAPI_ACCESS_TOKEN }}
+        path: external/SubnauticaApiSurface
 
+    - name: Setup .NET
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Build
+      run: dotnet build Nitrox.Test/Nitrox.Test.csproj
+
+    - name: Run Tests
+      run: dotnet test Nitrox.Test/Nitrox.Test.csproj --no-build --logger "trx;LogFileName=${{ matrix.os }}.trx" --results-directory "test_results"
+
+    - name: Upload Test Results
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      with:
+        name: Test Results (${{ matrix.os }})
+        path: test_results/${{ matrix.os }}.trx
+
+  publish:
+    needs: test
+    if: ${{ needs.test.result == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
     - name: Upload Event File
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: Event File
         path: ${{ github.event_path }}
-
-    - name: Upload Test Results
-      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-      if: ${{ !cancelled() }}
-      with:
-        name: Test Results
-        path: |
-          test_results/*.trx
