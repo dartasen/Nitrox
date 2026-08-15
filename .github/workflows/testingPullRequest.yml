@@ -36,6 +36,7 @@ jobs:
       run: dotnet test Nitrox.Test/Nitrox.Test.csproj --no-build --logger "trx;LogFileName=${{ matrix.os }}.trx" --results-directory "test_results"
 
     - name: Upload Test Results
+      if: ${{ !cancelled() }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: Test Results (${{ matrix.os }})
@@ -43,7 +44,7 @@ jobs:
 
   publish:
     needs: test
-    if: ${{ needs.test.result == 'success' }}
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     steps:
     - name: Upload Event File
