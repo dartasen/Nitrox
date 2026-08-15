@@ -104,7 +104,8 @@
                 <HintPath>$(GameManagedDir)FMODUnity.dll</HintPath>
                 <Private>$(TestLibrary)</Private>
             </Reference>
-            <Reference Include="Newtonsoft.Json" Condition="$(NotTestLibrary)">
+            <!-- The game Newtonsoft.Json assembly defines nullable attributes that conflict with modern .NET. -->
+            <Reference Include="Newtonsoft.Json" Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(NotTestLibrary)' == 'true'">
                 <HintPath>$(GameManagedDir)Newtonsoft.Json.dll</HintPath>
                 <Private>$(TestLibrary)</Private>
             </Reference>
