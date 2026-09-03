@@ -20,6 +20,7 @@
         <WarningsNotAsErrors>$(WarningsNotAsErrors);DIMA001;nullable</WarningsNotAsErrors>
         <!-- Disable CET because not everyone running Nitrox uses an up-to-date Windows. See for more info: https://github.com/SubnauticaNitrox/Nitrox/issues/2637 -->
         <CETCompat Condition="'$(_IsWindowsTarget)' == 'true'">false</CETCompat>
+        <ContinuousIntegrationBuild Condition="'$(_IsCI)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <!-- Nitrox specific properties -->
@@ -30,8 +31,6 @@
         <TestLibrary>false</TestLibrary>
         <NitroxLibrary>false</NitroxLibrary>
         <UnityModLibrary>false</UnityModLibrary>
-        <GameName>Subnautica</GameName>
-        <GameMinimumVersion>82304</GameMinimumVersion>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(MSBuildProjectName), '^Nitrox.*$'))">

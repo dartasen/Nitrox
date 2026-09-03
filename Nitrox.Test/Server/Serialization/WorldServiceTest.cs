@@ -15,15 +15,12 @@ using Nitrox.Server.Subnautica.Models.GameLogic.Unlockables;
 namespace Nitrox.Server.Subnautica.Models.Serialization.World;
 
 [TestClass]
-[SuppressMessage("Usage", "MSTEST0002:Test classes should have valid layout", Justification = "Necessary because PersistedWorldData is internal now.")]
-[SuppressMessage("Usage", "MSTEST0010:ClassInitialize methods should have valid layout", Justification = "Necessary because PersistedWorldData is internal now.")]
-[SuppressMessage("Usage", "MSTEST0011:ClassCleanup methods should have valid layout", Justification = "Necessary because PersistedWorldData is internal now.")]
-internal sealed class WorldServiceTest
+public class WorldServiceTest
 {
     private static readonly string tempSaveFilePath = Path.Combine(Path.GetTempPath(), "NitroxTestTempDir");
     private static PersistedWorldData worldData;
-    public static PersistedWorldData[]? WorldsDataAfter { get; private set; }
-    public static IServerSerializer[] ServerSerializers { get; private set; }
+    internal static PersistedWorldData[]? WorldsDataAfter { get; private set; }
+    internal static IServerSerializer[] ServerSerializers { get; private set; }
 
     [ClassInitialize]
     public static void ClassInitialize(TestContext testContext)
@@ -53,14 +50,16 @@ internal sealed class WorldServiceTest
         }
     }
 
-    [DataTestMethod, DynamicWorldDataAfter]
-    public void WorldDataTest(PersistedWorldData worldDataAfter, string serializerName)
+    [TestMethod, DynamicWorldDataAfter]
+    public void WorldDataTest(object worldDataAfter, string serializerName)
     {
-        Assert.IsTrue(worldData.WorldData.ParsedBatchCells.SequenceEqual(worldDataAfter.WorldData.ParsedBatchCells));
+        PersistedWorldData data = ((PersistedWorldData)worldDataAfter);
 
-        PDAStateTest(worldData.WorldData.GameData.PDAState, worldDataAfter.WorldData.GameData.PDAState);
-        StoryGoalTest(worldData.WorldData.GameData.StoryGoals, worldDataAfter.WorldData.GameData.StoryGoals);
-        StoryTimingTest(worldData.WorldData.GameData.StoryTiming, worldDataAfter.WorldData.GameData.StoryTiming);
+        Assert.IsTrue(worldData.WorldData.ParsedBatchCells.SequenceEqual(data.WorldData.ParsedBatchCells));
+
+        PDAStateTest(worldData.WorldData.GameData.PDAState, data.WorldData.GameData.PDAState);
+        StoryGoalTest(worldData.WorldData.GameData.StoryGoals, data.WorldData.GameData.StoryGoals);
+        StoryTimingTest(worldData.WorldData.GameData.StoryTiming, data.WorldData.GameData.StoryTiming);
     }
 
     private static void PDAStateTest(PdaStateData pdaState, PdaStateData pdaStateAfter)
@@ -102,10 +101,10 @@ internal sealed class WorldServiceTest
         Assert.AreEqual(storyTiming.AuroraWarningTime, storyTimingAfter.AuroraWarningTime);
     }
 
-    [DataTestMethod, DynamicWorldDataAfter]
-    public void PlayerDataTest(PersistedWorldData worldDataAfter, string serializerName)
+    [TestMethod, DynamicWorldDataAfter]
+    public void PlayerDataTest(object worldDataAfter, string serializerName)
     {
-        AssertHelper.IsListEqual(worldData.PlayerData.Players.OrderBy(x => x.Id), worldDataAfter.PlayerData.Players.OrderBy(x => x.Id), (playerData, playerDataAfter) =>
+        AssertHelper.IsListEqual(worldData.PlayerData.Players.OrderBy(x => x.Id), ((PersistedWorldData)worldDataAfter).PlayerData.Players.OrderBy(x => x.Id), (playerData, playerDataAfter) =>
         {
             Assert.AreEqual(playerData.Name, playerDataAfter.Name);
 
@@ -145,16 +144,16 @@ internal sealed class WorldServiceTest
         });
     }
 
-    [DataTestMethod, DynamicWorldDataAfter]
-    public void EntityDataTest(PersistedWorldData worldDataAfter, string serializerName)
+    [TestMethod, DynamicWorldDataAfter]
+    public void EntityDataTest(object worldDataAfter, string serializerName)
     {
-        AssertHelper.IsListEqual(worldData.EntityData.Entities.OrderBy(x => x.Id), worldDataAfter.EntityData.Entities.OrderBy(x => x.Id), EntityTest);
+        AssertHelper.IsListEqual(worldData.EntityData.Entities.OrderBy(x => x.Id), ((PersistedWorldData)worldDataAfter).EntityData.Entities.OrderBy(x => x.Id), EntityTest);
     }
 
-    [DataTestMethod, DynamicWorldDataAfter]
-    public void GlobalRootDataTest(PersistedWorldData worldDataAfter, string serializerName)
+    [TestMethod, DynamicWorldDataAfter]
+    public void GlobalRootDataTest(object worldDataAfter, string serializerName)
     {
-        AssertHelper.IsListEqual(worldData.GlobalRootData.Entities.OrderBy(x => x.Id), worldDataAfter.GlobalRootData.Entities.OrderBy(x => x.Id), EntityTest);
+        AssertHelper.IsListEqual(worldData.GlobalRootData.Entities.OrderBy(x => x.Id), ((PersistedWorldData)worldDataAfter).GlobalRootData.Entities.OrderBy(x => x.Id), EntityTest);
     }
 
     private static void EntityTest(Entity entity, Entity entityAfter)

@@ -5,35 +5,69 @@ on:
       - master
 
 jobs:
-  setup:
-    if: github.repository_owner == 'SubnauticaNitrox'
-    runs-on: [self-hosted, linux]
-    steps:
-    - name: Checking out repository
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
-
   build:
-    needs: setup
-    runs-on: [self-hosted, linux]
     strategy:
       matrix:
         configuration: [Debug, Release]
         runtime: [win-x64, win-arm64, linux-x64, linux-arm64, osx-x64, osx-arm64]
+    runs-on: macos-latest
+    env:
+      NITROX_GAME_INSTALLATION_PATH: ${{ github.workspace }}/external/SubnauticaApiSurface/output
+      NITROX_GAME_MANAGED_FOLDER: '.'
+      NITROX_GAME_DATA_FOLDER: '.'
+      NITROX_GAME_VERSION_RELATIVE_PATH: 'version.txt'
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+    - name: Checkout SubnauticaApiSurface
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      with:
+        repository: SubnauticaNitrox/SubnauticaApiSurface
+        token: ${{ secrets.SNAPI_ACCESS_TOKEN }}
+        path: external/SubnauticaApiSurface
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: '10.0.x'
+
     - name: Build
       run: dotnet build Nitrox.Launcher/Nitrox.Launcher.csproj -c ${{ matrix.configuration }} -r ${{ matrix.runtime }}
 
   test:
     needs: build
-    runs-on: [self-hosted, linux]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      NITROX_GAME_INSTALLATION_PATH: ${{ github.workspace }}/external/SubnauticaApiSurface/output
+      NITROX_GAME_MANAGED_FOLDER: '.'
+      NITROX_GAME_DATA_FOLDER: '.'
+      NITROX_GAME_VERSION_RELATIVE_PATH: 'version.txt'
     steps:
+    - name: Checkout repository
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+
+    - name: Checkout SubnauticaApiSurface
+      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+      with:
+        repository: SubnauticaNitrox/SubnauticaApiSurface
+        token: ${{ secrets.SNAPI_ACCESS_TOKEN }}
+        path: external/SubnauticaApiSurface
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+      with:
+        dotnet-version: '10.0.x'
+
     - name: Run Tests
       continue-on-error: true
-      run: dotnet test Nitrox.Test/Nitrox.Test.csproj --logger trx --results-directory "test_results"
+      run: dotnet test Nitrox.Test/Nitrox.Test.csproj --logger "trx;LogFileName=${{ matrix.os }}.trx" --results-directory "test_results"
 
     - name: Upload Test Results
-      uses: EnricoMi/publish-unit-test-result-action/linux@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2.23.0
-      if: (!cancelled())
+      uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
-        files: |
-          test_results/*.trx
+        name: Test Results (${{ matrix.os }})
+        path: test_results/${{ matrix.os }}.trx
