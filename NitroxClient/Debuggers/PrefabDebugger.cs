@@ -358,7 +358,7 @@ public sealed class PrefabDebugger : AbstractDebugger
         DestroyPreview();
         statusMessage = "Loading prefab...";
         int requestVersion = ++previewRequestVersion;
-        NitroxBootstrapper.Instance.StartCoroutine(LoadPreview(classId, requestVersion));
+        CoroutineHost.StartCoroutine(LoadPreview(classId, requestVersion));
     }
 
     private static void RenderReadOnlyField(string label, string value)
@@ -675,7 +675,7 @@ public sealed class PrefabDebugger : AbstractDebugger
         }
         forward.Normalize();
         Vector3 position = Player.main.transform.position + forward * 4f;
-        GameObject spawnedObject = GameObjectExtensions.InstantiateWithId(loadedPrefab, new NitroxId(), position, Quaternion.LookRotation(forward, Vector3.up));
+        GameObject spawnedObject = UnityEngine.Object.Instantiate(loadedPrefab, position, Quaternion.LookRotation(forward, Vector3.up), true);
         spawnedObject.name = selectedClassId;
         spawnedObjects.Add(spawnedObject);
         statusMessage = $"Instantiated {selectedClassId}.";
