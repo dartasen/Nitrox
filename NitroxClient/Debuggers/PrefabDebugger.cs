@@ -185,6 +185,11 @@ public sealed class PrefabDebugger : AbstractDebugger
             using (new GUILayout.HorizontalScope())
             {
                 searchText = GUILayout.TextField(searchText, GUILayout.ExpandWidth(true));
+                if (Event.current.isKey && (Event.current.keyCode == KeyCode.Return || Event.current.keyCode == KeyCode.KeypadEnter))
+                {
+                    FilterPrefabList();
+                    Event.current.Use();
+                }
                 if (GUILayout.Button("Clear", GUILayout.Width(60f)))
                 {
                     searchText = string.Empty;
@@ -566,7 +571,7 @@ public sealed class PrefabDebugger : AbstractDebugger
         // control pair is required to keep drag events inside the preview.
         if (currentEvent.type == EventType.ScrollWheel && previewRect.Contains(currentEvent.mousePosition))
         {
-            previewDistance = Mathf.Clamp(previewDistance - currentEvent.delta.y * 0.25f, MIN_PREVIEW_DISTANCE, MAX_PREVIEW_DISTANCE);
+            previewDistance = Mathf.Clamp(previewDistance + currentEvent.delta.y * 0.25f, MIN_PREVIEW_DISTANCE, MAX_PREVIEW_DISTANCE);
             previewNeedsRender = true;
             currentEvent.Use();
         }
