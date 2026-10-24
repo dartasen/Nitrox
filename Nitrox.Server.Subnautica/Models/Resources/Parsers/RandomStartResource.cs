@@ -3,9 +3,6 @@ using AssetsTools.NET;
 using AssetsTools.NET.Extra;
 using Nitrox.Model.Subnautica.DataStructures.GameLogic;
 using Nitrox.Server.Subnautica.Models.Resources.Core;
-using SixLabors.ImageSharp;
-using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 
 namespace Nitrox.Server.Subnautica.Models.Resources.Parsers;
 
@@ -46,28 +43,54 @@ internal sealed class RandomStartResource(SubnauticaAssetsManager assetsManager,
             return null;
         }
 
-        Image<Bgra32> texture = Image.LoadPixelData<Bgra32>(texDat, textureFile.m_Width, textureFile.m_Height);
-        texture.Mutate(x => x.Flip(FlipMode.Vertical));
+        PixelProvider pixelProvider = new(texDat, textureFile.m_Width, textureFile.m_Height);
         cancellationToken.ThrowIfCancellationRequested();
-        return new RandomStartGenerator(new PixelProvider(texture));
+        return new RandomStartGenerator(pixelProvider);
     }
 
-    private sealed class PixelProvider : RandomStartGenerator.IPixelProvider
+    internal sealed class PixelProvider : RandomStartGenerator.IPixelProvider
     {
-        private readonly Image<Bgra32> texture;
+        private const int BYTES_PER_PIXEL = 4;
 
-        public PixelProvider(Image<Bgra32> texture)
+        private readonly byte[] textureData;
+        private readonly int width;
+        private readonly int height;
+
+        public PixelProvider(byte[] textureData, int width, int height)
         {
-            Validate.NotNull(texture);
-            this.texture = texture;
+            ArgumentNullException.ThrowIfNull(textureData);
+            if (width <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(width));
+            }
+            if (height <= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(height));
+            }
+
+            int expectedLength = checked(width * height * BYTES_PER_PIXEL);
+            if (textureData.Length < expectedLength)
+            {
+                throw new ArgumentException("Texture data is shorter than required for its dimensions.", nameof(textureData));
+            }
+
+            this.textureData = textureData;
+            this.width = width;
+            this.height = height;
         }
 
-        private Bgra32 GetPixel(int x, int y) => texture[Math.Clamp(x, 0, texture.Width - 1), Math.Clamp(y, 0, texture.Height - 1)];
+        private int GetPixelIndex(int x, int y)
+        {
+            int clampedX = Math.Clamp(x, 0, width - 1);
+            int clampedY = Math.Clamp(y, 0, height - 1);
+            int flippedY = height - clampedY - 1;
+            return (flippedY * width + clampedX) * BYTES_PER_PIXEL;
+        }
 
-        public byte GetRed(int x, int y) => GetPixel(x, y).R;
+        public byte GetRed(int x, int y) => textureData[GetPixelIndex(x, y) + 2];
 
-        public byte GetGreen(int x, int y) => GetPixel(x, y).G;
+        public byte GetGreen(int x, int y) => textureData[GetPixelIndex(x, y) + 1];
 
-        public byte GetBlue(int x, int y) => GetPixel(x, y).B;
+        public byte GetBlue(int x, int y) => textureData[GetPixelIndex(x, y)];
     }
 }
