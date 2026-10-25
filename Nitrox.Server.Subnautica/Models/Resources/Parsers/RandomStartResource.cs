@@ -59,14 +59,8 @@ internal sealed class RandomStartResource(SubnauticaAssetsManager assetsManager,
         public PixelProvider(byte[] textureData, int width, int height)
         {
             ArgumentNullException.ThrowIfNull(textureData);
-            if (width <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(width));
-            }
-            if (height <= 0)
-            {
-                throw new ArgumentOutOfRangeException(nameof(height));
-            }
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(width);
+            ArgumentOutOfRangeException.ThrowIfNegativeOrZero(height);
 
             int expectedLength = checked(width * height * BYTES_PER_PIXEL);
             if (textureData.Length < expectedLength)
