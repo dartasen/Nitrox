@@ -20,6 +20,7 @@
         <WarningsNotAsErrors>$(WarningsNotAsErrors);NU1901;NU1902;NU1903;NU1904;DIMA001;nullable</WarningsNotAsErrors>
         <!-- Disable CET because not everyone running Nitrox uses an up-to-date Windows. See for more info: https://github.com/SubnauticaNitrox/Nitrox/issues/2637 -->
         <CETCompat Condition="'$(_IsWindowsTarget)' == 'true'">false</CETCompat>
+        <ContinuousIntegrationBuild Condition="'$(_IsCI)' == 'true'">true</ContinuousIntegrationBuild>
     </PropertyGroup>
 
     <!-- Nitrox specific properties -->
@@ -31,8 +32,12 @@
         <NitroxLibrary>false</NitroxLibrary>
         <NitroxExecutable>false</NitroxExecutable>
         <UnityModLibrary>false</UnityModLibrary>
-        <GameName>Subnautica</GameName>
-        <GameMinimumVersion>82304</GameMinimumVersion>
+        <!-- Game properties can be overridden with MSBuild properties or NITROX_GAME_* environment variables. -->
+        <GameName Condition="'$(GameName)' == ''">$(NITROX_GAME_NAME)</GameName>
+        <GameName Condition="'$(GameName)' == ''">Subnautica</GameName>
+        <GameMinimumVersion Condition="'$(GameMinimumVersion)' == ''">$(NITROX_GAME_MINIMUM_VERSION)</GameMinimumVersion>
+        <GameMinimumVersion Condition="'$(GameMinimumVersion)' == ''">82304</GameMinimumVersion>
+        <GameManagedDir Condition="'$(GameManagedDir)' == ''">$(NITROX_GAME_MANAGED_DIR)</GameManagedDir>
     </PropertyGroup>
 
     <PropertyGroup Condition="$([System.Text.RegularExpressions.Regex]::IsMatch($(MSBuildProjectName), '^Nitrox.*$'))">
