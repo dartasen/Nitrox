@@ -61,7 +61,7 @@
 
     <!-- Project references not to be code-linked with app, but are used by app as content files. See https://github.com/dotnet/msbuild/issues/4795#issuecomment-1443879474  -->
     <ItemGroup>
-        <ProjectReference Include="..\Nitrox.Server.Subnautica\Nitrox.Server.Subnautica.csproj" >
+        <ProjectReference Include="..\Nitrox.Server.Subnautica\Nitrox.Server.Subnautica.csproj" GlobalPropertiesToRemove="CreateAppBundle">
             <IsWeakReference>true</IsWeakReference>
         </ProjectReference>
         <ProjectReference Include="..\NitroxPatcher\NitroxPatcher.csproj">
@@ -119,6 +119,26 @@
               Retries="3"
               RetryDelayMilliseconds="100"
               SkipUnchangedFiles="True" />
+    </Target>
+
+    <Target Name="_NitroxAddLauncherPublishFiles" BeforeTargets="_NitroxMovePublishedDependencies">
+        <ItemGroup>
+            <_LauncherPublishPatcherFiles Include="$(TargetDir)lib\net472\**\*" />
+            <_LauncherPublishServerDependencies Include="$(TargetDir)lib\Microsoft.Extensions.*.dll"
+                                                Exclude="@(RuntimePackAsset->'$(TargetDir)lib\%(DestinationSubDirectory)%(Filename)%(Extension)')" />
+            <_LauncherPublishServerFiles Include="$(TargetDir)Nitrox.Server.Subnautica.deps.json;$(TargetDir)Nitrox.Server.Subnautica.runtimeconfig.json" />
+        </ItemGroup>
+        <Error Condition="!Exists('$(TargetDir)Nitrox.Server.Subnautica.deps.json') Or !Exists('$(TargetDir)Nitrox.Server.Subnautica.runtimeconfig.json')"
+               Text="The server build output is missing; build the launcher before publishing with --no-build." />
+        <Copy SourceFiles="@(_LauncherPublishPatcherFiles)"
+              DestinationFiles="@(_LauncherPublishPatcherFiles->'$(PublishDir)lib\net472\%(RecursiveDir)%(Filename)%(Extension)')"
+              SkipUnchangedFiles="true" />
+        <Copy SourceFiles="@(_LauncherPublishServerDependencies)"
+              DestinationFolder="$(PublishDir)lib\"
+              SkipUnchangedFiles="true" />
+        <Copy SourceFiles="@(_LauncherPublishServerFiles)"
+              DestinationFolder="$(PublishDir)"
+              SkipUnchangedFiles="true" />
     </Target>
 
     <ItemGroup>
