@@ -22,6 +22,10 @@
 
         <_IsMacOSTarget>false</_IsMacOSTarget>
         <_IsMacOSTarget Condition="'$(RuntimeIdentifier)' == 'osx-x64' Or '$(RuntimeIdentifier)' == 'osx-arm64'">true</_IsMacOSTarget>
+        
+        <!-- Current build environment -->
+        <_IsCI>false</_IsCI>
+        <_IsCI Condition="'$(GITHUB_ACTIONS)' == 'true' Or '$(CI)' == 'true'">true</_IsCI>
     </PropertyGroup>
 
     <!-- Git info properties -->

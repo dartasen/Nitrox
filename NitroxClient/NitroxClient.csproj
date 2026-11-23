@@ -12,7 +12,7 @@
 
     <ItemGroup>
         <Reference Include="LitJson">
-            <HintPath>$(GameManagedDir)\LitJson.dll</HintPath>
+            <HintPath>$(GameManagedDir)/LitJson.dll</HintPath>
             <Private>false</Private>
         </Reference>
     </ItemGroup>
