@@ -31,4 +31,4 @@ jobs:
       if: success()
       with:
         name: "Launcher_${{ matrix.runtime }}_#${{ steps.vars.outputs.pr_number }}_${{ steps.vars.outputs.commit_sha_short }}"
-        path: 'Nitrox.Launcher/bin/Debug/net10.0/'
+        path: 'Nitrox.Launcher/bin/Debug/net11.0/'

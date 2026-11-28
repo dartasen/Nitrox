@@ -19,13 +19,13 @@
             "stopAtEntry": false,
             "console": "externalTerminal",
             "windows": {
-                "program": "${workspaceFolder}/Nitrox.Server.Subnautica/bin/Debug/net10.0/Nitrox.Server.Subnautica.exe"
+                "program": "${workspaceFolder}/Nitrox.Server.Subnautica/bin/Debug/net11.0/Nitrox.Server.Subnautica.exe"
             },
             "linux": {
-                "program": "${workspaceFolder}/Nitrox.Server.Subnautica/bin/Debug/net10.0/Nitrox.Server.Subnautica"
+                "program": "${workspaceFolder}/Nitrox.Server.Subnautica/bin/Debug/net11.0/Nitrox.Server.Subnautica"
             },
             "osx": {
-                "program": "${workspaceFolder}/Nitrox.Server.Subnautica/bin/Debug/net10.0/Nitrox.Server.Subnautica"
+                "program": "${workspaceFolder}/Nitrox.Server.Subnautica/bin/Debug/net11.0/Nitrox.Server.Subnautica"
             }
         },
     ]
